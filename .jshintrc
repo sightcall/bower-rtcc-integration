@@ -1,0 +1,25 @@
+{
+  "asi": true,
+  "curly" : false,
+  "browser": true,
+  "bitwise": false,
+  "curly": false,
+  "eqeqeq": true,
+  "eqnull": true,
+  "immed": true,
+  "latedef": false,
+  "laxcomma": true,
+  "newcap": true,
+  "noarg": true,
+  "undef": true,
+  "strict": true,
+  "smarttabs": true,
+  "white": true,
+  "globals": {
+    "$": false,
+    "jQuery": false,
+    "require": false,
+    "RtccInt": true,
+    "module": false
+  }
+}

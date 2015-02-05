@@ -1,0 +1,12 @@
+.rtccint-box {
+  background: lightgrey;
+  padding: 5px;
+}
+.rtccint-connection-status li {
+  /* http://ptrn.it/1FBMynP */
+  list-style-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYV2O0tbX9z0AEYBxViC+UqB88AOdBESfO8RkSAAAAAElFTkSuQmCC");
+}
+.rtccint-connection-status li.rtccint-connected {
+  /* http://ptrn.it/1FBNg4v */
+  list-style-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYV2NkWMv2n4EIwDiqEF8oUT94AMQZEP+54X3IAAAAAElFTkSuQmCC");
+}
