@@ -41,10 +41,10 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
-          'src/rtccint-base.js',
+          'src/rtccint.js',
           'src/RtccInt/**',
         ],
-        dest: 'dist/rtccint-base.js',
+        dest: 'dist/rtccint.js',
       },
     },
 

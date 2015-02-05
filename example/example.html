@@ -9,7 +9,7 @@
   <meta name="author" content="SitePoint">
 
   <script src="../bower_components/jquery/dist/jquery.js"></script>
-  <script src="../dist/rtccint-base.js"></script>
+  <script src="../dist/rtccint.js"></script>
   <script src="https://static-dev.weemo.com/2.0/js/api/Rtcc.js"></script>
 
   <link rel="stylesheet" type="text/css" href="../dist/css/main.css">
@@ -17,7 +17,7 @@
 
 <body>
 	<script type="text/javascript">
-		var r = new Rtcc('appId', 'token', 'internal', {debugLevel:3, mode_parameter:'wd_webrtc'});
+		var r = new Rtcc('pocnickprod', 'token', 'internal', {debugLevel:3, mode_parameter:'wd_webrtc'});
 		$(document).ready(function(){
 			var widget = RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
 			r.initialize();

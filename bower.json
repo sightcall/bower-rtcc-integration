@@ -1,13 +1,14 @@
 {
-  "name": "rtccint-base",
+  "name": "rtccint",
   "version": "0.0.0",
   "authors": [
     "raphael-boucher <raphael.boucher@hotmail.fr>"
   ],
-  "description": "A library for an easier SightCall integration, with meaningfull defaults options. Additional SightCall bower packages can be pluged in.",
+  "description": "A library for an easier Rtcc integration, with composite features.",
   "keywords": [
     "sightcall",
-    "base",
+    "rtcc",
+    "integration",
     "video",
     "conference"
   ],

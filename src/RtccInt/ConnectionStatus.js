@@ -36,7 +36,7 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 	function manageSettings() {
 		if (!rtcc) throw new Error('First argument must be an object Rtcc.')
 		if (!(htmlContainer instanceof jQuery)) htmlContainer = $(htmlContainer)
-			
+
 		settings = settings || {};
 		settings.lang = settings.lang || {};
 		settings.useBox = settings.useBox || false;
@@ -47,6 +47,12 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 
 	function activateLi(key) {
 		$('.rtccint-connection-status .rtccint-' + key).addClass('rtccint-connected')
+	}
+
+	function deactivateLi(keys) {
+		$.each(keys, function(k, v) {
+			$('.rtccint-connection-status .rtccint-' + v).removeClass('rtccint-connected')
+		})
 	}
 
 	function buildHtml() {
@@ -66,6 +72,9 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 		$.each(statuses, function(k, v) {
 			rtcc.on(v.eventName, activateLi.bind(this, k));
 		})
+		rtcc.on('client.disconnect', deactivateLi.bind(this, ['client', 'cloud', 'authenticate', 'ready']));
+		rtcc.on('cloud.disconnect', deactivateLi.bind(this, ['cloud', 'authenticate', 'ready']));
+		rtcc.on('cloud.sip.ko', deactivateLi.bind(this, ['ready']));
 		htmlContainer.html(buildHtml());
 	}
 
