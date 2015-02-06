@@ -16,7 +16,82 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 
 	this.setContent(content)
 }
-;/**
+;RtccInt.Chat = function(rtccObject, htmlContainer, uid, settings) {
+	var html;
+	var that = this;
+	var from = {
+		ME: 'rtccint-me',
+		REMOTE: 'rtccint-remote',
+	}
+
+	if (!rtccObject) throw new Error('First argument must be an object Rtcc.')
+	if (!(htmlContainer instanceof jQuery)) htmlContainer = $(htmlContainer)
+
+	settings = settings || {};
+	settings.lang = settings.lang || {};
+	settings.useBox = settings.useBox || false;
+
+	function formatMessage(m) {
+		return RtccInt.Utils.htmlEscape(m).replace(new RegExp('\n', 'g'), '<br />');
+	}
+
+	function addMessage(message, cssClass) {
+		var container = html.find('.rtccint-messages')
+		var toAppend = $('<div class="rtccint-message ' + cssClass + '"><span class="rtccint-bubble">' + formatMessage(message) + '<br /></span></div>')
+		container.append(toAppend);
+		container.scrollTop(container.prop("scrollHeight"));
+		toAppend.hide().fadeIn()
+	}
+
+	this.send = function(message) {
+		if (message === '') return;
+		addMessage(message, from.ME);
+		rtccObject.sendMessage('', uid, message)
+	}
+
+	this.receive = function(message) {
+		addMessage(message, from.REMOTE)
+	}
+
+	function buildHtml() {
+		html = $('<div class="rtccint-chat"><div class="rtccint-uid">' + uid + '</div><div class="rtccint-messages"></div></div></div>');
+		html.append('<div class="rtccint-chat-controls"><button>Send</button><textarea></textarea></div>')
+
+		if (settings.useBox)
+			return (new RtccInt.Box(html)).html();
+		else
+			return html
+	}
+
+	function bindEvents() {
+		//html
+		var button = html.find('.rtccint-chat-controls button');
+		var textarea = html.find('.rtccint-chat-controls textarea');
+		var isShiftPressed = false;
+		button.on('click', function() {
+			that.send(textarea.val());
+			textarea.val('')
+		});
+
+		textarea.on('keypress', function(e) {
+			if (e.which == 13 && !e.shiftKey) { //13 = enter
+				e.preventDefault();
+				button.click();
+			}
+		})
+
+
+		//rtcc
+		rtccObject.on('message', function(messageId, dest, message) {
+			if (dest === uid) that.receive(message)
+		})
+	}
+
+	htmlContainer.html(buildHtml());
+	bindEvents();
+
+
+};/**
  * @param {Rtcc} rtccObject - The connection you want to track
  * @param {DOM object|jQuery} htmlContainer - The html object where the connection status will be displayed
  * @param {object} settings
@@ -31,6 +106,7 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 	'use strict'
 	var rtcc = rtccObject;
+	var html;
 
 	var statuses = {
 		'client': {
@@ -49,7 +125,12 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 			text: 'Ready',
 			eventName: 'cloud.sip.ok'
 		},
+		'presence': {
+			text: 'Presence',
+			eventName: 'presence.ok'
+		},
 	}
+
 
 	function manageSettings() {
 		if (!rtcc) throw new Error('First argument must be an object Rtcc.')
@@ -64,24 +145,24 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 	}
 
 	function activateLi(key) {
-		$('.rtccint-connection-status .rtccint-' + key).addClass('rtccint-connected')
+		html.find('.rtccint-' + key).addClass('rtccint-connected')
 	}
 
 	function deactivateLi(keys) {
 		$.each(keys, function(k, v) {
-			$('.rtccint-connection-status .rtccint-' + v).removeClass('rtccint-connected')
+			html.find('.rtccint-' + v).removeClass('rtccint-connected')
 		})
 	}
 
 	function buildHtml() {
-		var html = $('<ul class="rtccint-connection-status"></ul>');
+		html = $('<ul class="rtccint-connection-status"></ul>');
 		$.each(statuses, function(k, v) {
 			html.append('<li class="rtccint-' + k + '">' + v.text + '</li>')
 		})
-		if (settings.useBox) {
-			html = (new RtccInt.Box(html)).html();
-		}
-		return html
+		if (settings.useBox)
+			return (new RtccInt.Box(html)).html();
+		else
+			return html
 	}
 
 
@@ -90,11 +171,22 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 		$.each(statuses, function(k, v) {
 			rtcc.on(v.eventName, activateLi.bind(this, k));
 		})
-		rtcc.on('client.disconnect', deactivateLi.bind(this, ['client', 'cloud', 'authenticate', 'ready']));
-		rtcc.on('cloud.disconnect', deactivateLi.bind(this, ['cloud', 'authenticate', 'ready']));
+		rtcc.on('client.disconnect', deactivateLi.bind(this, Object.keys(statuses)));
+		rtcc.on('cloud.disconnect', deactivateLi.bind(this, ['cloud', 'authenticate', 'ready', 'presence']));
 		rtcc.on('cloud.sip.ko', deactivateLi.bind(this, ['ready']));
+		rtcc.on('presence.ko', deactivateLi.bind(this, ['presence']));
 		htmlContainer.html(buildHtml());
 	}
 
 	init();
-}
+};RtccInt.Utils = {
+	//exists in underscore, include it if we need another function
+	htmlEscape: function(str) {
+		return String(str)
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+};

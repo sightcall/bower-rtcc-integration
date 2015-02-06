@@ -13,6 +13,7 @@
 RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 	'use strict'
 	var rtcc = rtccObject;
+	var html;
 
 	var statuses = {
 		'client': {
@@ -31,7 +32,12 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 			text: 'Ready',
 			eventName: 'cloud.sip.ok'
 		},
+		'presence': {
+			text: 'Presence',
+			eventName: 'presence.ok'
+		},
 	}
+
 
 	function manageSettings() {
 		if (!rtcc) throw new Error('First argument must be an object Rtcc.')
@@ -46,24 +52,24 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 	}
 
 	function activateLi(key) {
-		$('.rtccint-connection-status .rtccint-' + key).addClass('rtccint-connected')
+		html.find('.rtccint-' + key).addClass('rtccint-connected')
 	}
 
 	function deactivateLi(keys) {
 		$.each(keys, function(k, v) {
-			$('.rtccint-connection-status .rtccint-' + v).removeClass('rtccint-connected')
+			html.find('.rtccint-' + v).removeClass('rtccint-connected')
 		})
 	}
 
 	function buildHtml() {
-		var html = $('<ul class="rtccint-connection-status"></ul>');
+		html = $('<ul class="rtccint-connection-status"></ul>');
 		$.each(statuses, function(k, v) {
 			html.append('<li class="rtccint-' + k + '">' + v.text + '</li>')
 		})
-		if (settings.useBox) {
-			html = (new RtccInt.Box(html)).html();
-		}
-		return html
+		if (settings.useBox)
+			return (new RtccInt.Box(html)).html();
+		else
+			return html
 	}
 
 
@@ -72,9 +78,10 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 		$.each(statuses, function(k, v) {
 			rtcc.on(v.eventName, activateLi.bind(this, k));
 		})
-		rtcc.on('client.disconnect', deactivateLi.bind(this, ['client', 'cloud', 'authenticate', 'ready']));
-		rtcc.on('cloud.disconnect', deactivateLi.bind(this, ['cloud', 'authenticate', 'ready']));
+		rtcc.on('client.disconnect', deactivateLi.bind(this, Object.keys(statuses)));
+		rtcc.on('cloud.disconnect', deactivateLi.bind(this, ['cloud', 'authenticate', 'ready', 'presence']));
 		rtcc.on('cloud.sip.ko', deactivateLi.bind(this, ['ready']));
+		rtcc.on('presence.ko', deactivateLi.bind(this, ['presence']));
 		htmlContainer.html(buildHtml());
 	}
 
