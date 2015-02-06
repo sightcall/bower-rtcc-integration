@@ -18,8 +18,7 @@
 }
 .rtccint-chat .rtccint-uid {
   text-align: center;
-  margin-bottom: 5px
-		;
+  margin-bottom: 5px;
 }
 .rtccint-chat .rtccint-messages {
   height: 200px;
@@ -28,6 +27,7 @@
   margin-bottom: 5px;
   border: 1px solid grey;
   background: #e4e4e4;
+  clear: both;
 }
 .rtccint-chat .rtccint-messages .rtccint-remote {
   text-align: right;
@@ -35,11 +35,22 @@
 .rtccint-chat .rtccint-messages .rtccint-remote .rtccint-bubble {
   background: #f9f9f9;
 }
+.rtccint-chat .rtccint-messages .rtccint-remote .rtccint-time {
+  float: left;
+}
 .rtccint-chat .rtccint-messages .rtccint-me .rtccint-bubble {
   background: #a8a8a8;
 }
+.rtccint-chat .rtccint-messages .rtccint-me .rtccint-time {
+  float: right;
+}
 .rtccint-chat .rtccint-messages .rtccint-message {
   margin-bottom: 5px;
+}
+.rtccint-chat .rtccint-messages .rtccint-time {
+  opacity: 0.6;
+  font-size: 0.7em;
+  display: inline-block;
 }
 .rtccint-chat .rtccint-chat-controls {
   position: relative;

@@ -21,51 +21,55 @@
 .rtccint-chat {
 	.rtccint-uid{
 		text-align: center;
-		margin-bottom: 5px
-		;	}
+		margin-bottom: 5px;	
+	}
 
-		.rtccint-messages{
-			height: 200px;
-			overflow: auto;
-			padding: 7px 5px;
+	.rtccint-messages{
+		height: 200px;
+		overflow: auto;
+		padding: 7px 5px;
+		margin-bottom: 5px;
+		border: 1px solid grey;
+		background: rgb(228, 228, 228);
+		clear: both;
+		.rtccint-remote {
+			text-align: right;
+			.rtccint-bubble{background: rgb(249, 249, 249);			}
+			.rtccint-time{ float: left;}
+		}
+		.rtccint-me{
+			.rtccint-bubble{background: rgb(168, 168, 168);	}
+			.rtccint-time{ float: right;}
+		}
+		.rtccint-message {
 			margin-bottom: 5px;
-			border: 1px solid grey;
-			background: rgb(228, 228, 228);
-			.rtccint-remote {
-				text-align: right;
-				.rtccint-bubble{
-					background: rgb(249, 249, 249);
-				}
-			}
-			.rtccint-me{
-				.rtccint-bubble{
-					background: rgb(168, 168, 168);
-				}
-			}
-			.rtccint-message {
-				margin-bottom: 5px;
-			}
-
 		}
 
-		@chat-textaera-width: 250px;
-		.rtccint-chat-controls{
-			position: relative;
-			button{
-				height: 40px;
-				width: 100px;
-				position: absolute;
-				left: @chat-textaera-width + 15px;
-			}
-			textarea {
-				height: 50px;
-				width: @chat-textaera-width;
-			}
+		.rtccint-time{
+			opacity: 0.6;
+			font-size: 0.7em;
+			display: inline-block;
 		}
 	}
 
-	.rtccint-bubble{
-		padding: 7px 10px;
-		border-radius: 7px;
-		display: inline-block;
+	@chat-textaera-width: 250px;
+	.rtccint-chat-controls{
+		position: relative;
+		button{
+			height: 40px;
+			width: 100px;
+			position: absolute;
+			left: @chat-textaera-width + 15px;
+		}
+		textarea {
+			height: 50px;
+			width: @chat-textaera-width;
+		}
 	}
+}
+
+.rtccint-bubble{
+	padding: 7px 10px;
+	border-radius: 7px;
+	display: inline-block;
+}

@@ -37,7 +37,9 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 
 	function addMessage(message, cssClass) {
 		var container = html.find('.rtccint-messages')
-		var toAppend = $('<div class="rtccint-message ' + cssClass + '"><span class="rtccint-bubble">' + formatMessage(message) + '<br /></span></div>')
+		var toAppend = $('<div class="rtccint-message ' + cssClass + '"></div>')
+		var time = '<span class="rtccint-time">' + (new Date()).toLocaleTimeString() + '</span>';
+		toAppend.append('<span class="rtccint-bubble">' + formatMessage(message) + '<br /></span>' + time + '')
 		container.append(toAppend);
 		container.scrollTop(container.prop("scrollHeight"));
 		toAppend.hide().fadeIn()
@@ -53,6 +55,12 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 		addMessage(message, from.REMOTE)
 	}
 
+	this.destroy = function(){
+		htmlContainer.remove(html);
+		rtccObject.off('message', onMessage);
+		rtccObject.off('message.acknowledge', onMessageAck)
+	}
+
 	function buildHtml() {
 		html = $('<div class="rtccint-chat"><div class="rtccint-uid">' + uid + '</div><div class="rtccint-messages"></div></div></div>');
 		html.append('<div class="rtccint-chat-controls"><button>Send</button><textarea></textarea></div>')
@@ -61,6 +69,13 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 			return (new RtccInt.Box(html)).html();
 		else
 			return html
+	}
+
+	function onMessage(messageId, dest, message){
+			if (dest === uid) that.receive(message)
+	}
+	function onMessageAck(messageId, dest, message){
+			if (dest === uid) that.acknowledge(messageId)
 	}
 
 	function bindEvents() {
@@ -82,9 +97,8 @@ RtccInt = RtccIntegration = {};;;RtccInt.Box = function(content) {
 
 
 		//rtcc
-		rtccObject.on('message', function(messageId, dest, message) {
-			if (dest === uid) that.receive(message)
-		})
+		rtccObject.on('message', onMessage)
+		rtccObject.on('message.acknowledge', onMessageAck)
 	}
 
 	htmlContainer.html(buildHtml());
