@@ -19,8 +19,8 @@
 	<script type="text/javascript">
 		var r = new Rtcc('pocnickqualif', 'cochonou@coch.on', 'internal', {debugLevel:3, mode_parameter:'webrtc_only', hap:'qualif/2/'});
 		$(document).ready(function(){
-			var statusWidget = new RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
-			var chatWidget = new RtccInt.Chat(r, $('#chat'), 'remote@remo.te', {useBox: true})
+			statusWidget = new RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
+			chatWidget = new RtccInt.Chat(r, $('#chat'), 'remote@remo.te', {useBox: true, displayName: 'coco le haricotè_çàè_çàé&"'})
 			r.on('presence.ok', function() {
 				chatWidget.send('hello')
 				chatWidget.send('\r\nqzeqfqseqse\nseqsefsef\rsseqsfqsef\r\nqsefsqfe')

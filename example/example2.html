@@ -19,8 +19,8 @@
 	<script type="text/javascript">
 		var r = new Rtcc('pocnickqualif', 'remote@remo.te', 'internal', {debugLevel:3, mode_parameter:'webrtc_only', hap:'qualif/2/'});
 		$(document).ready(function(){
-			var statusWidget = new RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
-			var chatWidget = new RtccInt.Chat(r, $('#chat'), 'cochonou@coch.on', {useBox: true})
+			statusWidget = new RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
+			chatWidget = new RtccInt.Chat(r, $('#chat'), 'cochonou@coch.on', {useBox: true})
 			r.on('presence.ok', function() {
 				chatWidget.send('HI, I am remote')
 				chatWidget.send('\r\nqzeq646846468\nfsqfe')
