@@ -1,17 +1,17 @@
 RtccInt.Box = function(content) {
-	'use strict'
-	var htmlContent;
-	this.setContent = function(newContent) {
-		if (newContent) htmlContent = newContent;
-	}
+  'use strict'
+  var htmlContent;
+  this.setContent = function(newContent) {
+    if (newContent) htmlContent = newContent;
+  }
 
-	this.getContent = function() {
-		return htmlContent;
-	}
+  this.getContent = function() {
+    return htmlContent;
+  }
 
-	this.html = function() {
-		return $('<div class="rtccint-box">').html(htmlContent);
-	}
+  this.html = function() {
+    return $('<div class="rtccint-box">').html(htmlContent);
+  }
 
-	this.setContent(content)
+  this.setContent(content)
 }
