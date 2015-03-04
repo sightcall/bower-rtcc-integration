@@ -74,6 +74,19 @@ module.exports = function(grunt) {
       }
     },
 
+    jasmine: {
+      unit: {
+        src: 'dist/rtccint.js',
+        options: {
+
+          keepRunner: true,
+          outfile: 'spec/unit/unit.html',
+          specs: ["spec/unit/*_spec.js"],
+          vendor: ['bower_components/jquery/dist/jquery.js']
+        }
+      }
+    }
+
 
   });
 
@@ -83,6 +96,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-githooks');
   grunt.loadNpmTasks('grunt-jsbeautifier');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default']);

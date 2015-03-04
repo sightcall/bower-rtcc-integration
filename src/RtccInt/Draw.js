@@ -1,20 +1,36 @@
 RtccInt.Draw = function(rtccObject) {
   'use strict'
   var videobox = $('.rtcc-videobox').first();
-  var modes = {
+  this.allModes = {
     POINTER: 1,
     DROP: 2,
     DRAW: 3
   }
-  var currentMode = modes.POINTER;
+  var currentMode = this.allModes.POINTER;
+  var canvas;
 
-  var setMode = function() {
-
+  this.setMode = function(mode) {
+    currentMode = mode;
   }
+
+  this.getMode = function() {
+    return currentMode;
+  }
+
+
 
   function init() {
     if (!videobox) throw 'RtccInt.Draw needs a videobox to draw.';
-    videobox.append($('<canvas />'))
+    canvas = $('<canvas />');
+    /*videobox.append(canvas);
+
+    canvas.on('mousemove', function(){
+      
+    })
+
+    rtccObject.on('inband.message', function(){
+
+    })*/
   }
 
   init();

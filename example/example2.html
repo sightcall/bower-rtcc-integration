@@ -17,10 +17,11 @@
 
 <body>
 	<script type="text/javascript">
-		var r = new Rtcc('pocnickqualif', 'remote@remo.te', 'internal', {debugLevel:3, mode_parameter:'webrtc_only', hap:'qualif/2/'});
+    var r = new Rtcc('pocnickppr', 'remote@remo.te', 'internal', {debugLevel:3, mode_parameter:'webrtc_only', hap:'ppr/2/'});
 		$(document).ready(function(){
 			statusWidget = new RtccInt.ConnectionStatus(r, $('#connection'), {useBox: true})
-			chatWidget = new RtccInt.Chat(r, $('#chat'), 'cochonou@coch.on', {useBox: true})
+			chatWidget = new RtccInt.Chat(r, 'cochonou@coch.on', {}, {isTypingMode: RtccInt.Chat.isTypingModes.PREVIEW})
+      $('#chat').append(chatWidget.getBox())
 			r.on('presence.ok', function() {
 				chatWidget.send('HI, I am remote')
 				chatWidget.send('\r\nqzeq646846468\nfsqfe')
@@ -30,7 +31,7 @@
 	</script>
 
 	<div id='connection'></div>
-	<div id='chat' style="width:400px;"></div>
+	<div id='chat' style="width:400px;background: black;"></div>
 
 </body>
 </html>

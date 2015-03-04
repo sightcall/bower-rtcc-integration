@@ -1,89 +1,89 @@
-RtccInt.Chat = function(rtccObject, htmlContainer, uid, settings) {
+/**
+ * @param {Rtcc} rtccObject - The Rtcc object handling connexion
+ * @param {String} uid - The SightCall user ID to chat with
+ * @param {object={}} userCallbacks
+ * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
+ *     Must return a jQuery object of the chatbox with :
+ *     - an attribute rtcc-messages where the messages will be append
+ *     - an attribute rtcc-send for the send message button(s)
+ *     - an attribute rtcc-input where the text to send will be extracted
+ * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
+ *
+ *
+ *
+ * @desc A modular chat
+ */
+
+
+RtccInt.Chat = function(rtccObject, uid, userCallbacks, settings) {
   'use strict'
-  var html;
-  var that = this;
-  var sentTyping = false;
-  var from = {
-    ME: 'rtccint-me',
-    REMOTE: 'rtccint-remote',
+
+  //DEFAULT ARGS
+  if (!rtccObject) throw new Error('First argument must be an object Rtcc.')
+  if (!uid) throw new Error('UID ' + uid + ' is incorrect.')
+  settings = settings || {};
+  settings.displayName = settings.displayName || uid;
+  settings.isTypingMode = settings.isTypingMode || RtccInt.Chat.isTypingModes.NORMAL;
+
+  userCallbacks = userCallbacks || {};
+  var defaultCallbacks = {
+
+    buildChatBox: function() {
+      var html = $('<div class="rtccint-chat"><div class="rtccint-uid">' + settings.displayName +
+        '</div><div rtcc-messages class="rtccint-messages"></div></div></div>');
+      html.append('<div class="rtccint-chat-controls"><button rtcc-send>Send</button><textarea rtcc-input></textarea></div>')
+      return html
+    },
+
+    formatMessage: (function(message, from) {
+      var toAppend = $('<div class="rtccint-message ' + from + '"></div>')
+      var time = '<span class="rtccint-time">' + (new Date()).toLocaleTimeString() + '</span>';
+      toAppend.append('<span class="rtccint-bubble">' + message + '<br /></span>' + time + '')
+      messageContainer.append(toAppend);
+      this.scrollBottom();
+      toAppend.hide().fadeIn()
+    }).bind(this),
+
+    showTyping: (function(text) {
+      callbacks.hideTyping();
+      text = text ? ': ' + text : '...';
+      messageContainer.append($('<div class="rtccint-typing">' + settings.displayName + ' is typing' + text + '</div>'))
+      this.scrollBottom();
+    }).bind(this),
+
+    hideTyping: function() {
+      chatBox.find('.rtccint-typing').remove();
+    }
+
   }
 
-  if (!rtccObject) throw new Error('First argument must be an object Rtcc.')
-  if (!(htmlContainer instanceof jQuery)) htmlContainer = $(htmlContainer)
+  var callbacks = {};
+  $.each(defaultCallbacks, function(k, v) {
+    callbacks[k] = userCallbacks[k] || v;
+  })
 
-  settings = settings || {};
-  settings.lang = settings.lang || {};
-  settings.useBox = settings.useBox || false;
-  settings.displayName = settings.displayName || uid;
 
-  function formatMessage(m) {
+  //PRIVATE VARS
+  var chatBox;
+  var messageContainer;
+  var sendButton;
+  var textInput;
+  var that = this;
+  var typingSent = false;
+
+
+  //PRIVATE FUNCTIONS
+  function escapeMessage(m) {
     return RtccInt.Utils.htmlEscape(m).replace(new RegExp('\n', 'g'), '<br />');
   }
 
-
-  function buildHtml() {
-    html = $('<div class="rtccint-chat"><div class="rtccint-uid">' + settings.displayName + '</div><div class="rtccint-messages"></div></div></div>');
-    html.append('<div class="rtccint-chat-controls"><button>Send</button><textarea></textarea></div>')
-
-    if (settings.useBox)
-      return (new RtccInt.Box(html)).html();
-    else
-      return html
+  function getInputText() {
+    return textInput.val().replace(new RegExp('\r?\n$'), '');
   }
 
-  function addMessage(message, cssClass) {
-    var container = html.find('.rtccint-messages')
-    var toAppend = $('<div class="rtccint-message ' + cssClass + '"></div>')
-    var time = '<span class="rtccint-time">' + (new Date()).toLocaleTimeString() + '</span>';
-    toAppend.append('<span class="rtccint-bubble">' + formatMessage(message) + '<br /></span>' + time + '')
-    container.append(toAppend);
-    container.scrollTop(container.prop("scrollHeight"));
-    toAppend.hide().fadeIn()
+  function addMessage(message, from) {
+    callbacks.formatMessage(escapeMessage(message), from)
   }
-
-  function showTyping() {
-    var container = html.find('.rtccint-messages')
-    container.append($('<div class="rtccint-typing">' + settings.displayName + ' is typing...</div>'))
-    container.scrollTop(container.prop("scrollHeight"));
-  }
-
-  function hideTyping() {
-    html.find('.rtccint-typing').remove();
-  }
-
-
-  this.send = function(message) {
-    if (message === '') return;
-    addMessage(message, from.ME);
-    var json = JSON.stringify({
-      message: message
-    })
-    rtccObject.sendMessage('', uid, json)
-  }
-  this.sendTyping = function(status) {
-    status = status === undefined ? true : false;
-    rtccObject.sendMessage('', uid, JSON.stringify({
-      typing: status
-    }))
-  }
-
-  this.receive = function(json) {
-    var data = JSON.parse(json);
-    if (data.message)
-      addMessage(data.message, from.REMOTE);
-    else if (data.typing)
-      showTyping();
-    else if (data.typing === false)
-      hideTyping();
-
-  }
-
-  this.destroy = function() {
-    htmlContainer.remove(html);
-    rtccObject.off('message', onMessage);
-    rtccObject.off('message.acknowledge', onMessageAck)
-  }
-
 
   function onMessage(messageId, dest, message) {
     if (dest === uid) that.receive(message)
@@ -93,40 +93,100 @@ RtccInt.Chat = function(rtccObject, htmlContainer, uid, settings) {
     if (dest === uid) that.acknowledge(messageId)
   }
 
+  function onPressEnter(e) {
+    if (e.which === 13 && !e.shiftKey) { //13 = enter
+      e.preventDefault();
+      sendButton.click();
+    }
+  }
+
+  function onTyping() {
+    var text = getInputText();
+    if (settings.isTypingMode !== RtccInt.Chat.isTypingModes.NONE &&
+      (settings.isTypingMode === RtccInt.Chat.isTypingModes.PREVIEW || text.length === 0 || !typingSent)
+    ) {
+      typingSent = that.sendTyping(text);
+    }
+  }
+
+  function onClickButton() {
+    that.send(getInputText());
+    textInput.val('')
+    typingSent = that.sendTyping('');
+  }
+
   function bindEvents() {
     //html
-    var button = html.find('.rtccint-chat-controls button');
-    var textarea = html.find('.rtccint-chat-controls textarea');
-    var isShiftPressed = false;
-    button.on('click', function() {
-      that.send(textarea.val());
-      textarea.val('')
-      that.sendTyping(false);
-      sentTyping = false;
-    });
-
-    textarea.on('keyup', function(e) {
-      if (e.which === 13 && !e.shiftKey) { //13 = enter
-        e.preventDefault();
-        button.click();
-      }
-      if (textarea.val().length > 0 && !sentTyping) {
-        that.sendTyping();
-        sentTyping = true;
-      } else if (textarea.val().length === 0) {
-        that.sendTyping(false);
-        sentTyping = false;
-      }
-    })
-
+    sendButton.on('click', onClickButton);
+    textInput.on('input', onTyping);
+    textInput.on('keyup', onPressEnter)
 
     //rtcc
     rtccObject.on('message', onMessage)
     rtccObject.on('message.acknowledge', onMessageAck)
   }
 
-  htmlContainer.html(buildHtml());
+
+  //PUBLIC FUNCTIONS
+  this.send = function(message) {
+    if (message === '') return;
+    addMessage(message, RtccInt.Chat.from.ME);
+    var json = JSON.stringify({
+      message: message
+    })
+    rtccObject.sendMessage('', uid, json)
+  }
+
+  this.receive = function(json) {
+    var data = JSON.parse(json);
+    if (data.message)
+      addMessage(data.message, RtccInt.Chat.from.REMOTE);
+    else if (data.typing)
+      callbacks.showTyping(typeof data.value === "string" ? escapeMessage(data.value) : data.value);
+    else if (data.typing === false)
+      callbacks.hideTyping();
+  }
+
+  this.sendTyping = function(text) {
+    var status = text.length !== 0;
+    var textToSend = (settings.isTypingMode === RtccInt.Chat.isTypingModes.PREVIEW) ? text : false;
+    rtccObject.sendMessage('', uid, JSON.stringify({
+      typing: status,
+      value: textToSend
+    }))
+    return status;
+  }
+
+  this.scrollBottom = function() {
+    messageContainer.scrollTop(messageContainer.prop("scrollHeight"))
+  }
+
+  this.getBox = function() {
+    return chatBox;
+  }
+
+  this.destroy = function() {
+    chatBox.remove();
+    rtccObject.off('message', onMessage);
+    rtccObject.off('message.acknowledge', onMessageAck)
+  }
+
+
+  chatBox = callbacks.buildChatBox();
+  messageContainer = chatBox.find('[rtcc-messages]')
+  sendButton = chatBox.find('[rtcc-send]')
+  textInput = chatBox.find('[rtcc-input]')
   bindEvents();
+}
 
 
+//CONSTANTS
+RtccInt.Chat.from = {
+  ME: 'rtccint-me',
+  REMOTE: 'rtccint-remote',
+}
+RtccInt.Chat.isTypingModes = {
+  NONE: 1,
+  NORMAL: 2,
+  PREVIEW: 3
 }

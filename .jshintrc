@@ -21,6 +21,10 @@
     "jQuery": false,
     "require": false,
     "RtccInt": true,
-    "module": false
+    "module": false,
+    "describe": false,
+    "it": false,
+    "beforeEach": false,
+    "expect": false
   }
 }
