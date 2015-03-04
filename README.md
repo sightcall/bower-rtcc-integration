@@ -10,6 +10,8 @@ install Grunt, then
 
 `grunt watch`
 
+The result is in `dist`
+
 ## Setup git
 
 Install git hook with
