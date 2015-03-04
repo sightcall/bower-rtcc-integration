@@ -1,15 +1,23 @@
 /**
+ * A widget to chat with another SightCall user
+ * @class
+ *
  * @param {Rtcc} rtccObject - The Rtcc object handling connexion
  * @param {String} uid - The SightCall user ID to chat with
- * @param {object={}} userCallbacks
+ * @param {object} [userCallbacks={}]
  * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
  *     Must return a jQuery object of the chatbox with :
  *     - an attribute rtcc-messages where the messages will be append
  *     - an attribute rtcc-send for the send message button(s)
  *     - an attribute rtcc-input where the text to send will be extracted
- * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
+ * @param {function} [userCallbacks.buildChatBox=buildChatBox] -
+ * @param {function} [userCallbacks.showTyping=showTyping] -
+ * @param {function} [userCallbacks.hideTyping=hideTyping] -
  *
- *
+ * @param {object} [settings={}]
+ * @param {object} [settings.displayName=uid] - The name of the remote person, used by default callbacks
+ * @param {object} [settings.isTypingMode] - According to this option, the chat will
+ *    send some data about what the local user is typing. Use {@link RtccInt.Chat.isTypingModes} enumeration.
  *
  * @desc A modular chat
  */
@@ -185,8 +193,17 @@ RtccInt.Chat.from = {
   ME: 'rtccint-me',
   REMOTE: 'rtccint-remote',
 }
+
+/**
+ * Typing modes
+ * @readonly
+ * @enum {string}
+ */
 RtccInt.Chat.isTypingModes = {
+  /** No data about typing will be sent */
   NONE: 1,
+  /** Remote user will know that current user is typing */
   NORMAL: 2,
+  /** Remote user will see what the current user is typing */
   PREVIEW: 3
 }

@@ -85,18 +85,22 @@ module.exports = function(grunt) {
           vendor: ['bower_components/jquery/dist/jquery.js']
         }
       }
+    },
+
+    jsdoc: {
+      dist: {
+        src: jsFiles,
+        options: {
+          destination: 'doc'
+        }
+      }
     }
 
 
   });
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-less');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-githooks');
-  grunt.loadNpmTasks('grunt-jsbeautifier');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
+  //auto load all tasks
+  require('load-grunt-tasks')(grunt);
 
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default']);

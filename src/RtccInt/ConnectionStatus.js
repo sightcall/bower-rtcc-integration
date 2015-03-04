@@ -1,7 +1,9 @@
 /**
+ * A widget to show the connection status.
+ * @class
  * @param {Rtcc} rtccObject - The connection you want to track
- * @param {DOM object|jQuery} htmlContainer - The html object where the connection status will be displayed
- * @param {object} settings
+ * @param {jQueryObject} htmlContainer - The html object where the connection status will be displayed
+ * @param {object} [settings={}]
  * @param {object} [settings.lang] - The string to display next to each status
  * @param {string} [settings.lang.client] - Can reach the client
  * @param {string} [settings.lang.cloud] - Can reach the cloud
