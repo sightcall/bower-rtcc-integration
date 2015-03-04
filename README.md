@@ -8,6 +8,8 @@ install Grunt, then
 
 `npm install`
 
+`bower install`
+
 `grunt watch`
 
 The result is in `dist`
