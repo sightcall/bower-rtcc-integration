@@ -1,5 +1,10 @@
 var RtccInt, RtccIntegration;
 RtccInt = RtccIntegration = {};
+
+/**
+ * @typedef {object} jQueryObject
+ * @typedef {object} Rtcc
+ */
 ;;RtccInt.Box = function(content) {
   'use strict'
   var htmlContent;
@@ -18,17 +23,25 @@ RtccInt = RtccIntegration = {};
   this.setContent(content)
 }
 ;/**
+ * A widget to chat with another SightCall user
+ * @class
+ *
  * @param {Rtcc} rtccObject - The Rtcc object handling connexion
  * @param {String} uid - The SightCall user ID to chat with
- * @param {object={}} userCallbacks
+ * @param {object} [userCallbacks={}]
  * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
  *     Must return a jQuery object of the chatbox with :
  *     - an attribute rtcc-messages where the messages will be append
  *     - an attribute rtcc-send for the send message button(s)
  *     - an attribute rtcc-input where the text to send will be extracted
- * @param {function} [userCallbacks.buildChatBox=defaultChatBox] -
+ * @param {function} [userCallbacks.buildChatBox=buildChatBox] -
+ * @param {function} [userCallbacks.showTyping=showTyping] -
+ * @param {function} [userCallbacks.hideTyping=hideTyping] -
  *
- *
+ * @param {object} [settings={}]
+ * @param {object} [settings.displayName=uid] - The name of the remote person, used by default callbacks
+ * @param {object} [settings.isTypingMode] - According to this option, the chat will
+ *    send some data about what the local user is typing. Use {@link RtccInt.Chat.isTypingModes} enumeration.
  *
  * @desc A modular chat
  */
@@ -204,15 +217,26 @@ RtccInt.Chat.from = {
   ME: 'rtccint-me',
   REMOTE: 'rtccint-remote',
 }
+
+/**
+ * Typing modes
+ * @readonly
+ * @enum {string}
+ */
 RtccInt.Chat.isTypingModes = {
+  /** No data about typing will be sent */
   NONE: 1,
+  /** Remote user will know that current user is typing */
   NORMAL: 2,
+  /** Remote user will see what the current user is typing */
   PREVIEW: 3
 }
 ;/**
+ * A widget to show the connection status.
+ * @class
  * @param {Rtcc} rtccObject - The connection you want to track
- * @param {DOM object|jQuery} htmlContainer - The html object where the connection status will be displayed
- * @param {object} settings
+ * @param {jQueryObject} htmlContainer - The html object where the connection status will be displayed
+ * @param {object} [settings={}]
  * @param {object} [settings.lang] - The string to display next to each status
  * @param {string} [settings.lang.client] - Can reach the client
  * @param {string} [settings.lang.cloud] - Can reach the cloud
@@ -299,39 +323,108 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 
   init.call(this);
 }
-;RtccInt.Draw = function(rtccObject) {
+;RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+
+RtccInt.Draw = function(rtccObject, settings) {
   'use strict'
+
+  settings = settings || {};
+  settings.pointerUrl = settings.pointerUrl || RtccInt.scriptpath + 'img/pointer.png';
+
+  var that = this;
+  var allCanvas = {
+    pointer: $('<canvas class="rtccint-pointer" />'),
+    annotations: $('<canvas class="rtccint-annotations" />')
+  }
   var videobox = $('.rtcc-videobox').first();
   this.allModes = {
     POINTER: 1,
     DROP: 2,
     DRAW: 3
   }
-  var currentMode = this.allModes.POINTER;
-  var canvas;
+  var currentMode;
+  var hexHundredPercent = parseInt('FFFE', 16);
+  var ctx;
+
+  this.ctxPtr = allCanvas.pointer[0].getContext('2d');
+  this.pointer = new Image();
+  this.pointer.src = settings.pointerUrl;
 
   this.setMode = function(mode) {
     currentMode = mode;
+    updateModeListener();
   }
 
   this.getMode = function() {
     return currentMode;
   }
 
+  this._percentToHex = function(percent) {
+    var hex = Math.round(percent / 100 * parseInt('FFFE', 16)).toString(16).toUpperCase();
+    while (hex.length !== 4) {
+      hex = '0' + hex;
+    }
+    return hex
+  }
+
+  function mouseCoordToHex(x, y) {
+    var xOffset = x - videobox.offset().top;
+    var yOffset = y - videobox.offset().left;
+    return that._percentToHex(x / videobox.width()) + that._percentToHex(y / videobox.height())
+  }
+
+  //this also erase all the canvas content...
+  function updateCanvasSize() {
+    $.each(allCanvas, function(k, canvas) {
+      canvas[0].width = videobox.width()
+      canvas[0].height = videobox.height()
+    })
+    that.ctxPtr = allCanvas.pointer[0].getContext("2d")
+  }
+
+  var modeListeners = {};
+  modeListeners[this.allModes.POINTER] = function(event) {
+    rtccObject.sendInbandMessage('RTCCPTR' + mouseCoordToHex(event.pageX, event.pageY));
+  }
+
+  function updateModeListener() {
+    removeModeListeners();
+    videobox.on('mousemove', modeListeners[currentMode]);
+  }
+
+  function removeModeListeners() {
+    $.each(modeListeners, function(k, listener) {
+      videobox.off('mousemove', listener)
+    })
+  }
 
 
   function init() {
     if (!videobox) throw 'RtccInt.Draw needs a videobox to draw.';
-    canvas = $('<canvas />');
-    /*videobox.append(canvas);
 
-    canvas.on('mousemove', function(){
-      
+    $.each(allCanvas, function(k, v) {
+      videobox.append(v);
     })
 
-    rtccObject.on('inband.message', function(){
+    that.setMode(that.allModes.POINTER); //pointer is the default mode
 
-    })*/
+    rtccObject.on('inband.message', function(message) {
+      if (message.search('RTCCPTR') === 0) {
+        that.ctxPtr.clearRect(0, 0, allCanvas.pointer.width(), allCanvas.pointer.height());
+        if (message.substring(7, 17) !== 'FFFFFFFF') {
+          var x = Math.round(parseInt(message.substring(7, 11), 16) / hexHundredPercent * allCanvas.pointer.width());
+          var y = Math.round(parseInt(message.substring(11, 15), 16) / hexHundredPercent * allCanvas.pointer.height());
+          that.ctxPtr.drawImage(that.pointer, x - that.pointer.width / 2, y - that.pointer.height / 2)
+        }
+      }
+    });
+
+    if (typeof ResizeSensor !== 'function')
+      throw 'Missing css-element-queries dependency. You can find it in the bower_components folder.'
+
+    new ResizeSensor(videobox, updateCanvasSize)
+
+    updateCanvasSize();
   }
 
   init();

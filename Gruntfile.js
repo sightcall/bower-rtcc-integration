@@ -2,12 +2,17 @@ module.exports = function(grunt) {
   'use strict'
 
   var jsFiles = ['Gruntfile.js', 'src/**/*.js', 'spec/**/*.js']
+  var testDeps = [
+    'bower_components/jquery/dist/jquery.js',
+    'bower_components/css-element-queries/src/ResizeSensor.js',
+    'spec/support/*.js'
+  ]
 
   grunt.initConfig({
 
     watch: {
       files: ['<%= jshint.files %>', 'assets/**/*'],
-      tasks: ['less:development', 'concat']
+      tasks: ['build']
     },
 
     less: {
@@ -78,11 +83,19 @@ module.exports = function(grunt) {
       unit: {
         src: 'dist/rtccint.js',
         options: {
-
           keepRunner: true,
           outfile: 'spec/unit/unit.html',
           specs: ["spec/unit/*_spec.js"],
-          vendor: ['bower_components/jquery/dist/jquery.js']
+          vendor: testDeps
+        }
+      },
+      acceptance: {
+        src: 'dist/rtccint.js',
+        options: {
+          keepRunner: true,
+          outfile: 'spec/acceptance/acceptance.html',
+          specs: ["spec/acceptance/*_spec.js"],
+          vendor: testDeps
         }
       }
     },
@@ -93,6 +106,19 @@ module.exports = function(grunt) {
         options: {
           destination: 'doc'
         }
+      }
+    },
+
+    copy: {
+      main: {
+        files: [
+          {
+            expand: true,
+            cwd: 'assets/',
+            src: ['**', '!css/**/*.less'],
+            dest: 'dist/'
+          },
+        ]
       }
     }
 
@@ -105,6 +131,6 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default']);
   grunt.registerTask('precommit', ['jshint', 'jsbeautifier:git-pre-commit']);
-  grunt.registerTask('build', ['less:development', 'concat']);
+  grunt.registerTask('build', ['less:development', 'concat', 'copy']);
 
 };

@@ -24,7 +24,11 @@
     "module": false,
     "describe": false,
     "it": false,
+    "xit": false,
     "beforeEach": false,
-    "expect": false
+    "expect": false,
+    "jasmine": false,
+    "afterEach": false,
+    "ResizeSensor": false
   }
 }
