@@ -14,7 +14,7 @@ describe('draw module', function() {
       clearRect: jasmine.createSpy('clearRect')
     }
 
-    draw = new RtccInt.Draw(rtcc);
+    draw = new RtccInt.Draw(rtcc, callObject);
     draw.ctxPtr = ctxPtr;
   });
 
@@ -25,12 +25,12 @@ describe('draw module', function() {
 
 
   it('set mode', function() {
-    draw.setMode(draw.allModes.DRAW)
-    expect(draw.getMode()).toBe(draw.allModes.DRAW)
+    draw.setMode(Rtcc.annotationMode.DRAW)
+    expect(draw.getMode()).toBe(Rtcc.annotationMode.DRAW)
   });
 
   it('has pointer as default mode', function() {
-    expect(draw.getMode()).toBe(draw.allModes.POINTER)
+    expect(draw.getMode()).toBe(Rtcc.annotationMode.POINTER)
   });
 
   xit('send pointer position', function() {

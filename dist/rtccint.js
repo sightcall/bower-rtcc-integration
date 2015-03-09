@@ -325,7 +325,7 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 }
 ;RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
 
-RtccInt.Draw = function(rtccObject, settings) {
+RtccInt.Draw = function(rtccObject, callObject, settings) {
   'use strict'
 
   settings = settings || {};
@@ -337,11 +337,6 @@ RtccInt.Draw = function(rtccObject, settings) {
     annotations: $('<canvas class="rtccint-annotations" />')
   }
   var videobox = $('.rtcc-videobox').first();
-  this.allModes = {
-    POINTER: 1,
-    DROP: 2,
-    DRAW: 3
-  }
   var currentMode;
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
@@ -352,6 +347,7 @@ RtccInt.Draw = function(rtccObject, settings) {
 
   this.setMode = function(mode) {
     currentMode = mode;
+    callObject.callPointer(mode)
     updateModeListener();
   }
 
@@ -383,7 +379,7 @@ RtccInt.Draw = function(rtccObject, settings) {
   }
 
   var modeListeners = {};
-  modeListeners[this.allModes.POINTER] = function(event) {
+  modeListeners[Rtcc.annotationMode.POINTER] = function(event) {
     rtccObject.sendInbandMessage('RTCCPTR' + mouseCoordToHex(event.pageX, event.pageY));
   }
 
@@ -406,7 +402,7 @@ RtccInt.Draw = function(rtccObject, settings) {
       videobox.append(v);
     })
 
-    that.setMode(that.allModes.POINTER); //pointer is the default mode
+    that.setMode(Rtcc.annotationMode.POINTER); //pointer is the default mode
 
     rtccObject.on('inband.message', function(message) {
       if (message.search('RTCCPTR') === 0) {

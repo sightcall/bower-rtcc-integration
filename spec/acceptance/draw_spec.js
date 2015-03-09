@@ -3,18 +3,21 @@ describe('draw module', function() {
   var draw;
   var rtcc;
   var handleInbandMessage;
+  var videobox
 
   beforeEach(function() {
-    $('body').append('<div class="rtcc-videobox" style="position:absolute; width: 50px; height : 50px;"></div>');
+    videobox = $('<div class="rtcc-videobox" style="position:absolute; width: 50px; height : 50px;"></div>')
+    $('body').append(videobox);
     rtcc = {
-      on: jasmine.createSpy('on')
-    }
-    draw = new RtccInt.Draw(rtcc)
+      on: jasmine.createSpy('on'),
+      sendInbandMessage: jasmine.createSpy('sendInbandMessage')
+    };
+    draw = new RtccInt.Draw(rtcc, callObject)
     handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
   });
 
   afterEach(function() {
-    $('body .rtcc-videobox').remove();
+    videobox.remove();
   })
 
   function hasPointerDrawn(x, y) {
@@ -52,15 +55,21 @@ describe('draw module', function() {
     }
   });
 
-  it('sends pointer coordinates', function() {
+  xit('sends pointer coordinates', function() {
+    videobox.offset({
+      top: 100,
+      left: 200
+    })
+
     // create a jQuery event
     var e = $.Event('mousemove');
 
     // set coordinates
-    e.pageX = 100;
-    e.pageY = 100;
+    e.pageX = 125;
+    e.pageY = 225;
 
     // trigger event - must trigger on document
     $(document).trigger(e);
+    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
   })
 });

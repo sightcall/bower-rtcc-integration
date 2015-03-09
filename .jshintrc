@@ -26,9 +26,10 @@
     "it": false,
     "xit": false,
     "beforeEach": false,
+    "afterEach": false,
     "expect": false,
     "jasmine": false,
-    "afterEach": false,
+    "Rtcc": false,
     "ResizeSensor": false
   }
 }
