@@ -32,15 +32,15 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
 
   this._percentToHex = function(percent) {
     var hex = Math.round(percent / 100 * parseInt('FFFE', 16)).toString(16).toUpperCase();
-    while (hex.length !== 4) {
+    while (hex.length < 4) {
       hex = '0' + hex;
     }
     return hex
   }
 
   function mouseCoordToHex(x, y) {
-    var xOffset = x - videobox.offset().top;
-    var yOffset = y - videobox.offset().left;
+    var xOffset = x - videobox[0].getBoundingClientRect().top;
+    var yOffset = y - videobox[0].getBoundingClientRect().left;
     return that._percentToHex(xOffset / videobox.width() * 100) + that._percentToHex(yOffset / videobox.height() * 100)
   }
 
@@ -93,7 +93,10 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
     if (typeof ResizeSensor !== 'function')
       throw 'Missing css-element-queries dependency. You can find it in the bower_components folder.'
 
-    new ResizeSensor(videobox, updateCanvasSize)
+    new ResizeSensor(videobox, updateCanvasSize);
+    if (videobox.attr('style').indexOf('position: relative') !== -1) {
+      videobox.css('position', 'fixed')
+    }
 
     updateCanvasSize();
   }

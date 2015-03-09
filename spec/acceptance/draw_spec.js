@@ -61,15 +61,31 @@ describe('draw module', function() {
       left: 200
     })
 
-    // create a jQuery event
-    var e = $.Event('mousemove');
+    var e;
+    /*
+        var event1 = $.Event('mousemove');
+        event1.pageX = 10;
+        event1.pageY = 10;
+        $(document).trigger(event1);
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();*/
 
-    // set coordinates
+    e = $.Event('mousemove');
     e.pageX = 125;
     e.pageY = 225;
-
-    // trigger event - must trigger on document
     videobox.trigger(e);
     expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
+
+
+    videobox.offset({
+      top: 10000,
+      left: 20000
+    })
+
+    e = $.Event('mousemove');
+    e.pageX = 10025;
+    e.pageY = 20025;
+    videobox.trigger(e);
+    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
+
   })
 });
