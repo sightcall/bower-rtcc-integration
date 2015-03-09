@@ -41,7 +41,7 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
   function mouseCoordToHex(x, y) {
     var xOffset = x - videobox.offset().top;
     var yOffset = y - videobox.offset().left;
-    return that._percentToHex(x / videobox.width()) + that._percentToHex(y / videobox.height())
+    return that._percentToHex(xOffset / videobox.width() * 100) + that._percentToHex(yOffset / videobox.height() * 100)
   }
 
   //this also erase all the canvas content...

@@ -55,7 +55,7 @@ describe('draw module', function() {
     }
   });
 
-  xit('sends pointer coordinates', function() {
+  it('sends pointer coordinates', function() {
     videobox.offset({
       top: 100,
       left: 200
@@ -69,7 +69,7 @@ describe('draw module', function() {
     e.pageY = 225;
 
     // trigger event - must trigger on document
-    $(document).trigger(e);
+    videobox.trigger(e);
     expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
   })
 });
