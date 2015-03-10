@@ -8,11 +8,13 @@ module.exports = function(grunt) {
     'spec/support/*.js'
   ]
 
+
   grunt.initConfig({
 
+    config: grunt.file.readJSON('config.json'),
     watch: {
       files: ['<%= jshint.files %>', 'assets/**/*'],
-      tasks: ['build']
+      tasks: ['build', 'sftp']
     },
 
     less: {
@@ -42,6 +44,8 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
+          'bower_components/jquery/dist/jquery.js',
+          'bower_components/css-element-queries/src/ResizeSensor.js',
           'src/rtccint.js',
           'src/RtccInt/**',
         ],
@@ -120,7 +124,24 @@ module.exports = function(grunt) {
           },
         ]
       }
-    }
+    },
+
+    sftp: {
+      test: {
+        files: {
+          "./": "dist/**"
+        },
+        options: {
+          srcBasePath: "dist/",
+          createDirectories: true,
+          path: '<%= config.path %>',
+          host: '<%= config.host %>',
+          username: '<%= config.username %>',
+          password: '<%= config.password %>',
+          showProgress: true
+        }
+      }
+    },
 
 
   });

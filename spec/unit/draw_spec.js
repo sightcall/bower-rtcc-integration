@@ -15,6 +15,7 @@ describe('draw module', function() {
     }
 
     draw = new RtccInt.Draw(rtcc, callObject);
+    draw.setMode(Rtcc.annotationMode.POINTER);
     draw.ctxPtr = ctxPtr;
   });
 

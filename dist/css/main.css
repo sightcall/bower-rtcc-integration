@@ -16,9 +16,13 @@
   /* http://ptrn.it/1FBNg4v */
   list-style-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYV2NkWMv2n4EIwDiqEF8oUT94AMQZEP+54X3IAAAAAElFTkSuQmCC");
 }
-.rtccint-annotations {
+.rtccint-annotations,
+.rtccint-pointer {
   width: 100%;
   height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 .rtccint-chat .rtccint-uid {
   text-align: center;

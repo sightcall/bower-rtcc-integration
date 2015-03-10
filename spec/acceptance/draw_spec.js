@@ -18,74 +18,103 @@ describe('draw module', function() {
 
   afterEach(function() {
     videobox.remove();
+    draw.destroy();
   })
 
   function hasPointerDrawn(x, y) {
-    var data = draw.ctxPtr.getImageData(x - 5, y - 2, 1, 1).data;
-    return data[0] === 69 && data[1] === 69 && data[2] === 69 && data[3] === 255
+    var data = draw.ctxPtr.getImageData(x, y, 1, 1).data;
+    return data[0] === 219 && data[1] === 219 && data[2] === 219 && data[3] === 201
   }
 
-  it('draws the pointer in the correct place', function(done) {
-    draw.pointer.onload = function() {
-      handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
-      expect(hasPointerDrawn(25, 25)).toBe(true)
-      done();
-    }
+  function mouseMoveEvent(x, y) {
+    var e = $.Event('mousemove');
+    e.pageX = x;
+    e.pageY = y;
+    return e
+  }
+
+
+  describe('pointer', function() {
+    beforeEach(function() {
+      draw.setMode(Rtcc.annotationMode.POINTER);
+    });
+
+    describe('draw pointer', function() {
+      it('draws the pointer in the correct place', function(done) {
+        draw.pointer.onload = function() {
+          handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
+          expect(hasPointerDrawn(25, 25)).toBe(true)
+          done();
+        }
+      });
+
+      it('can draw after resize', function(done) {
+        draw.pointer.onload = function() {
+          $('body .rtcc-videobox').width(100)
+            //we have to wait for the resize event to be managed
+          setTimeout(function() {
+            handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
+            expect(hasPointerDrawn(50, 25)).toBe(true)
+            done();
+          }, 100)
+        }
+      })
+
+      it('draws only one pointer at a time', function(done) {
+        draw.pointer.onload = function() {
+          handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
+          handleInbandMessage('RTCCPTR' + draw._percentToHex(10) + draw._percentToHex(10)) //0 0
+          expect(hasPointerDrawn(25, 25)).toBe(false)
+          expect(hasPointerDrawn(5, 5)).toBe(true)
+          done();
+        }
+      });
+    });
+
+    describe('send pointer coordinates', function() {
+      it('with offset', function() {
+        videobox.offset({
+          left: 200,
+          top: 100,
+        })
+        videobox.trigger(mouseMoveEvent(225, 125));
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith('RTCCPTRFFFFFFFF');
+      });
+
+
+      it('with offset and scrolling', function() {
+        videobox.offset({
+          left: 20000,
+          top: 10000,
+        })
+        videobox.trigger(mouseMoveEvent(20025, 10025));
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
+      })
+
+      it('send correct message when mouse out of videobox if needed', function() {
+        videobox.offset({
+            left: 200,
+            top: 100,
+          })
+          //no pointer yet
+        $(document).trigger(mouseMoveEvent(199, 150));
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();
+
+        //outside videobox with pointer
+        videobox.trigger(mouseMoveEvent(225, 125));
+        $(document).trigger(mouseMoveEvent(199, 150));
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTRFFFFFFFF');
+
+        //outside again
+        $(document).trigger(mouseMoveEvent(199, 150));
+        expect(rtcc.sendInbandMessage.calls.all().length).toBe(2);
+      })
+    });
+
+
   });
 
-  it('can draw after resize', function(done) {
-    draw.pointer.onload = function() {
-      $('body .rtcc-videobox').width(100)
-        //we have to wait for the resize event to be managed
-      setTimeout(function() {
-        handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
-        expect(hasPointerDrawn(50, 25)).toBe(true)
-        done();
-      }, 100)
-    }
-  })
-
-  it('draws only one pointer at a time', function(done) {
-    draw.pointer.onload = function() {
-      handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
-      handleInbandMessage('RTCCPTR' + draw._percentToHex(10) + draw._percentToHex(10)) //0 0
-      expect(hasPointerDrawn(25, 25)).toBe(false)
-      expect(hasPointerDrawn(5, 5)).toBe(true)
-      done();
-    }
-  });
-
-  it('sends pointer coordinates', function() {
-    videobox.offset({
-      top: 100,
-      left: 200
-    })
-
-    var e;
-    /*
-        var event1 = $.Event('mousemove');
-        event1.pageX = 10;
-        event1.pageY = 10;
-        $(document).trigger(event1);
-        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();*/
-
-    e = $.Event('mousemove');
-    e.pageX = 125;
-    e.pageY = 225;
-    videobox.trigger(e);
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
 
 
-    videobox.offset({
-      top: 10000,
-      left: 20000
-    })
-
-    e = $.Event('mousemove');
-    e.pageX = 10025;
-    e.pageY = 20025;
-    videobox.trigger(e);
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
-
-  })
 });

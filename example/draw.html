@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Document</title>
-  <script src="https://static-dev.weemo.com/2.0/js/api/Rtcc.js"></script>
   <script src="../bower_components/jquery/dist/jquery.js" type="text/javascript" charset="utf-8"></script>
   <script src="../bower_components/css-element-queries/src/ResizeSensor.js" type="text/javascript" charset="utf-8"></script>
   <script src="../dist/rtccint.js" type="text/javascript" charset="utf-8"></script>
@@ -19,17 +18,28 @@
   </div>
 
   <script type="text/javascript">
-    var r = new Rtcc('pocnickppr', 'cochonou@coch.on', 'internal', {
-      debugLevel: 3,
-      mode_parameter: 'webrtc_only',
-      hap: 'ppr/2/'
-    });
+    
     var inbandMessageCb;
-    r.on = function(type, cb){
-      if(type === 'inband.message') inbandMessageCb = cb;
+    r = {
+      on: function(type, cb) {
+        if (type === 'inband.message') inbandMessageCb = cb;
+      },
+      sendInbandMessage: function(m){
+        console.log(m)
+      }
+    }
+    var Rtcc = {
+      annotationMode: {
+        POINTER: 'pointer',
+        DRAW: 'draw',
+        DROP: 'drop'
+      }
+    }
+    var callObject = {
+      callPointer: function(){}
     }
     $(document).ready(function() {
-      d = new RtccInt.Draw(r);
+      d = new RtccInt.Draw(r, callObject);
       d.pointer.onload = function() {
         inbandMessageCb('RTCCPTR7FFF7FFF')
         inbandMessageCb('RTCCPTRFFFE7FFF')
