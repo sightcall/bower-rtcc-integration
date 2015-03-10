@@ -23,7 +23,7 @@ describe('draw module', function() {
 
   function hasPointerDrawn(x, y) {
     var data = draw.ctxPtr.getImageData(x, y, 1, 1).data;
-    return data[0] === 219 && data[1] === 219 && data[2] === 219 && data[3] === 201
+    return isColorCorrectish(data, [219, 219, 219, 201])
   }
 
   function mouseMoveEvent(x, y) {
@@ -35,10 +35,6 @@ describe('draw module', function() {
 
 
   describe('pointer', function() {
-    beforeEach(function() {
-      draw.setMode(Rtcc.annotationMode.POINTER);
-    });
-
     describe('draw pointer', function() {
       it('draws the pointer in the correct place', function(done) {
         draw.pointer.onload = function() {
@@ -72,6 +68,9 @@ describe('draw module', function() {
     });
 
     describe('send pointer coordinates', function() {
+      beforeEach(function() {
+        draw.setMode(Rtcc.annotationMode.POINTER);
+      });
       it('with offset', function() {
         videobox.offset({
           left: 200,
@@ -115,6 +114,43 @@ describe('draw module', function() {
 
   });
 
+
+
+  describe('drop', function() {
+    function hasDropDrawn(x, y) {
+      var data = draw.ctxDraw.getImageData(x, y - 15, 1, 1).data;
+      return isColorCorrectish(data, [102, 254, 30, 255])
+    }
+
+
+    describe('receive drop', function() {
+      it('draws a circle', function(done) {
+        draw.circle.onload = function() {
+          handleInbandMessage('RTCCDROP7FFF7FFF') //50% 50%
+          expect(hasDropDrawn(25, 25)).toBe(true)
+          done();
+        }
+      });
+
+      it('can be erased', function(done) {
+        draw.circle.onload = function() {
+          handleInbandMessage('RTCCDROP7FFF7FFF') //50% 50%
+          expect(hasDropDrawn(25, 25)).toBe(true)
+          draw.erase();
+          expect(hasDropDrawn(25, 25)).toBe(false)
+          done();
+        }
+      })
+
+    });
+
+
+    describe('send drop', function() {
+      beforeEach(function() {
+        draw.setMode(Rtcc.annotationMode.DROP);
+      });
+    });
+  });
 
 
 });

@@ -26,13 +26,10 @@ describe('draw module', function() {
 
 
   it('set mode', function() {
-    draw.setMode(Rtcc.annotationMode.DRAW)
-    expect(draw.getMode()).toBe(Rtcc.annotationMode.DRAW)
-  });
-
-  it('has pointer as default mode', function() {
+    draw.setMode(Rtcc.annotationMode.POINTER)
     expect(draw.getMode()).toBe(Rtcc.annotationMode.POINTER)
   });
+
 
   xit('send pointer position', function() {
     draw.setMode(draw.allModes.POINTER);

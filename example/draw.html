@@ -22,7 +22,7 @@
     var inbandMessageCb;
     r = {
       on: function(type, cb) {
-        if (type === 'inband.message') inbandMessageCb = cb;
+        if (type === 'message.inband') inbandMessageCb = cb;
       },
       sendInbandMessage: function(m){
         console.log(m)
@@ -43,6 +43,7 @@
       d.pointer.onload = function() {
         inbandMessageCb('RTCCPTR7FFF7FFF')
         inbandMessageCb('RTCCPTRFFFE7FFF')
+        inbandMessageCb('RTCCDROPFFFE7FFF')
       }
     })
   </script>

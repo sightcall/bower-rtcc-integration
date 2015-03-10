@@ -9700,7 +9700,8 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
   'use strict'
 
   settings = settings || {};
-  settings.pointerUrl = settings.pointerUrl || RtccInt.scriptpath + 'img/pointer.png';
+  settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
+  settings.circleSrc = settings.circleSrc || RtccInt.scriptpath + 'img/drop_green.png';
 
   var that = this;
   var allCanvas = {
@@ -9714,14 +9715,16 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
   var shouldSendPointerOff = false;
   var shouldSendPointer = true;
 
-  this.ctxPtr = allCanvas.pointer[0].getContext('2d');
-  this.pointer = new Image();
-  this.pointer.src = settings.pointerUrl;
+  this.ctxPtr = false;
+  this.ctxDraw = false;
   this.pointerDelay = 50; //in ms
+  this.pointer = new Image();
+  this.pointer.src = settings.pointerSrc;
+  this.circle = new Image()
+  this.circle.src = settings.circleSrc;
 
   this.setMode = function(mode) {
     currentMode = mode;
-    callObject.callPointer(mode)
     updateModeListener();
   }
 
@@ -9755,11 +9758,24 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
     this.ctxPtr.clearRect(0, 0, allCanvas.pointer.width(), allCanvas.pointer.height());
   }
 
+  this.dropCircle = function(x, y) {
+    this.ctxDraw.drawImage(that.circle, x - that.circle.width / 2, y - that.circle.height / 2)
+  }
+
+  this.erase = function() {
+    this.ctxDraw.clearRect(0, 0, allCanvas.annotations.width(), allCanvas.annotations.height());
+  }
+
   this.destroy = function() {
     removeModeListeners();
     $.each(allCanvas, function(k, v) {
       v.remove();
     })
+  }
+
+  function updateContexts() {
+    that.ctxPtr = allCanvas.pointer[0].getContext('2d');
+    that.ctxDraw = allCanvas.annotations[0].getContext('2d');
   }
 
   function mouseCoordToHex(x, y) {
@@ -9776,7 +9792,7 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
       canvas[0].width = videobox.width()
       canvas[0].height = videobox.height()
     })
-    that.ctxPtr = allCanvas.pointer[0].getContext("2d")
+    updateContexts();
   }
 
 
@@ -9800,16 +9816,20 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
   }
 
   var modeListeners = {};
-  modeListeners[Rtcc.annotationMode.POINTER] = pointerMouseListener
+  modeListeners[Rtcc.annotationMode.POINTER] = {
+    target: $(document),
+    listener: pointerMouseListener
+  }
 
   function updateModeListener() {
     removeModeListeners();
-    $(document).on('mousemove', modeListeners[currentMode]);
+    var modeListener = modeListeners[currentMode];
+    modeListener.target.on('mousemove', modeListener.listener);
   }
 
   function removeModeListeners() {
-    $.each(modeListeners, function(k, listener) {
-      $(document).off('mousemove', listener)
+    $.each(modeListeners, function(k, v) {
+      v.target.off('mousemove', v.listener)
     })
   }
 
@@ -9826,15 +9846,25 @@ RtccInt.Draw = function(rtccObject, callObject, settings) {
   }
 
   function handleInbandMessage(message) {
-    if (message.search('RTCCPTR') === 0) {
-      var hexStr = message.substring(7, 15);
-      if (!isOutOfBox(hexStr)) {
+    $.each({
+      RTCCPTR: function(hexStr) {
+        if (!isOutOfBox(hexStr)) {
+          var coords = coordinatesFromHexStr(hexStr)
+          that.setPointer(coords.x, coords.y)
+        } else {
+          that.cleanPointer();
+        }
+      },
+      RTCCDROP: function(hexStr) {
         var coords = coordinatesFromHexStr(hexStr)
-        that.setPointer(coords.x, coords.y)
-      } else {
-        that.cleanPointer();
+        that.dropCircle(coords.x, coords.y)
+      },
+      RTCCERASE: that.erase
+    }, function(key, listener) {
+      if (message.search(key) === 0) {
+        listener(message.replace(key, ''))
       }
-    }
+    })
   }
 
   function startResizeSensor() {
