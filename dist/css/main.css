@@ -23,6 +23,8 @@
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 100008;
+  /* based on UI index */
 }
 .rtccint-chat .rtccint-uid {
   text-align: center;
