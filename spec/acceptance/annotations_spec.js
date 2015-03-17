@@ -1,4 +1,4 @@
-describe('draw module', function() {
+describe('annotations module', function() {
   'use strict'
   var draw;
   var rtcc;
@@ -35,18 +35,26 @@ describe('draw module', function() {
   }
 
   function mouseMoveEvent(x, y) {
-    var e = $.Event('mousemove');
-    e.pageX = x;
-    e.pageY = y;
-    return e
+    return $.Event('mousemove', {
+      pageX: x,
+      pageY: y
+    });
   }
 
   function rightClickEvent(x, y) {
-    var e = $.Event('mousedown');
-    e.pageX = x;
-    e.pageY = y;
-    e.which = 3
-    return e
+    return $.Event('mousedown', {
+      pageX: x,
+      pageY: y,
+      which: 3
+    });
+  }
+
+  function releaseRightClickEvent(x, y) {
+    return $.Event("mouseup", {
+      which: 3,
+      pageX: x,
+      pageY: y
+    });
   }
 
 
@@ -194,6 +202,89 @@ describe('draw module', function() {
       videobox.trigger(rightClickEvent(200 + videobox.width() * 0.5, 100 + videobox.height() * 0.5))
       expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith()
     });
+  });
+
+
+
+  describe('draw', function() {
+    function toHaveLine(xPercent, yPercent, expectedData) {
+      var x = Math.round(xPercent * videobox.width() / 100)
+      var y = Math.round(yPercent * videobox.height() / 100)
+      var data = draw.ctxDraw.getImageData(x, y, 1, 1).data;
+      return isColorCorrectish(data, expectedData)
+    }
+
+    describe('receive', function() {
+
+      it('draws a line between two points', function() {
+        handleInbandMessage('RTCCDRAW7FFF7FFF') //50% 50%
+        handleInbandMessage('RTCCDRAWFFFE7FFF') //100% 50%
+        expect(toHaveLine(75, 50, draw.color.receive)).toBe(true)
+      });
+
+      it('draws a line between three points', function() {
+        handleInbandMessage('RTCCDRAW00007FFF') //00% 50%
+        handleInbandMessage('RTCCDRAW7FFF7FFF') //50% 50%
+        handleInbandMessage('RTCCDRAW7FFFFFFE') //50% 100%
+        expect(toHaveLine(25, 50, draw.color.receive)).toBe(true)
+        expect(toHaveLine(50, 75, draw.color.receive)).toBe(true)
+      });
+
+      it('draws several lines', function() {
+        /**
+         * ____..
+         * |..   |
+         * |__:__|
+         *
+         */
+        handleInbandMessage('RTCCDRAW00007FFF') //00% 50%
+        handleInbandMessage('RTCCDRAW7FFF7FFF') //50% 50%
+        handleInbandMessage('RTCCDRAW7FFFFFFE') //50% 100%
+        handleInbandMessage('RTCCDRAWFFFFFFFF') //stop
+
+        handleInbandMessage('RTCCDRAW7FFF0000') //50% 0%
+        handleInbandMessage('RTCCDRAWFFFE0000') //100% 0%
+        expect(toHaveLine(50, 25, draw.color.receive)).toBe(false)
+        expect(toHaveLine(75, 0, draw.color.receive)).toBe(true)
+      })
+
+    });
+
+
+    describe('right click', function() {
+      beforeEach(function() {
+        draw.setMode(Rtcc.annotationMode.DRAW);
+      });
+
+      it('send coordinates', function() {
+        videobox.trigger(rightClickEvent(200 + videobox.width() * 0.5, 100 + videobox.height() * 0.5));
+        videobox.trigger(mouseMoveEvent(200, 100))
+        videobox.trigger(mouseMoveEvent(200 + videobox.width() * 1, 100 + videobox.height() * 1))
+        videobox.trigger(releaseRightClickEvent(200 + videobox.width() * 1, 100 + videobox.height() * 1))
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW7FFF7FFF')
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW00000000')
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFEFFFE')
+        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFFFFFF')
+      });
+
+      it('does not draw without right click', function() {
+        videobox.trigger(mouseMoveEvent(200, 100))
+        videobox.trigger(mouseMoveEvent(200 + videobox.width() * 1, 100 + videobox.height() * 1))
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled()
+      });
+
+      it('draw line', function() {
+        videobox.trigger(rightClickEvent(200 + videobox.width() * 0, 100 + videobox.height() * 0.5));
+        videobox.trigger(mouseMoveEvent(200 + videobox.width() * 0.5, 100 + videobox.height() * 0.5));
+        videobox.trigger(mouseMoveEvent(200 + videobox.width() * 0.5, 100 + videobox.height() * 1));
+        videobox.trigger(releaseRightClickEvent(200 + videobox.width() * 1, 100 + videobox.height() * 1))
+        expect(toHaveLine(25, 50, draw.color.send)).toBe(true)
+        expect(toHaveLine(50, 75, draw.color.send)).toBe(true)
+      });
+
+    });
+
+
   });
 
 

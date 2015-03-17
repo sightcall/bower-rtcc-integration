@@ -21,6 +21,9 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   var ctx;
   var shouldSendPointerOff = false;
   var shouldSendPointer = true;
+  var previousDrawCoordinatesReceived = false;
+  var previousDrawCoordinatesSent = false;
+  var rightMouseDown = false;
 
   //ATTRIBUTES
   this.ctxPtr = false;
@@ -33,6 +36,10 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   this.remoteCircle.src = settings.remoteCircleSrc;
   this.localCircle = new Image()
   this.localCircle.src = settings.localCircleSrc;
+  this.color = {
+    receive: [114, 255, 0, 255],
+    send: [255, 174, 0, 255]
+  }
 
   //PUBLIC
   this.setMode = function(mode) {
@@ -81,6 +88,15 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
       drawnCircleWidth,
       drawnCircleHeight
     )
+  }
+
+  this.drawLine = function(from, to, color) {
+    this.ctxDraw.beginPath();
+    this.ctxDraw.moveTo(from.x, from.y);
+    this.ctxDraw.lineTo(to.x, to.y);
+    this.ctxDraw.lineWidth = 3;
+    this.ctxDraw.strokeStyle = 'rgba(' + color.join(',') + ')';
+    this.ctxDraw.stroke();
   }
 
   this.erase = function() {
@@ -156,14 +172,25 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     }
   }
 
+  function sendDrawCoords(event) {
+    var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
+    rtccObject.sendInbandMessage('RTCCDRAW' + hexCoords);
+    return hexCoords;
+  }
+
+  function stopDraw() {
+    previousDrawCoordinatesSent = false
+    rtccObject.sendInbandMessage('RTCCDRAWFFFFFFFF');
+  }
+
   //event listeners
   var modeListeners = {};
-  modeListeners[Rtcc.annotationMode.POINTER] = {
+  modeListeners[Rtcc.annotationMode.POINTER] = [{
     event: 'mousemove',
     target: $(document),
     listener: pointerMouseListener
-  }
-  modeListeners[Rtcc.annotationMode.DROP] = {
+  }]
+  modeListeners[Rtcc.annotationMode.DROP] = [{
     event: 'mousedown',
     target: videobox,
     listener: function(event) {
@@ -174,18 +201,61 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
         that.dropCircle(coords.x, coords.y, that.localCircle)
       }
     }
-  }
+  }]
+  modeListeners[Rtcc.annotationMode.DRAW] = [{
+    event: 'mousedown',
+    target: videobox,
+    listener: function(event) {
+      if (event.which === 3) {
+        rightMouseDown = true
+        var hexStr = sendDrawCoords(event);
+        if (!isOutOfBox(hexStr)) {
+          previousDrawCoordinatesSent = coordinatesFromHexStr(hexStr)
+        }
+      }
+    }
+  }, {
+    event: 'mouseup',
+    target: videobox,
+    listener: function(event) {
+      if (event.which === 3) {
+        rightMouseDown = false
+        stopDraw();
+      }
+    }
+  }, {
+    event: 'mousemove',
+    target: $(document),
+    listener: function(event) {
+      if (rightMouseDown) {
+        var hexStr = sendDrawCoords(event);
+        if (isOutOfBox(hexStr)) {
+          previousDrawCoordinatesSent = false
+          stopDraw();
+        } else {
+          var coords = coordinatesFromHexStr(hexStr)
+          if (previousDrawCoordinatesSent)
+            that.drawLine(previousDrawCoordinatesSent, coords, that.color.send)
+          previousDrawCoordinatesSent = coords
+        }
+      }
+    }
+  }]
+
 
   function updateModeListener() {
     removeModeListeners();
-    var modeListener = modeListeners[currentMode];
-    if (modeListener)
-      modeListener.target.on(modeListener.event, modeListener.listener);
+    if (modeListeners[currentMode].length)
+      $.each(modeListeners[currentMode], function(k, modeListener) {
+        modeListener.target.on(modeListener.event, modeListener.listener);
+      })
   }
 
   function removeModeListeners() {
-    $.each(modeListeners, function(k, v) {
-      v.target.off(v.event, v.listener)
+    $.each(modeListeners, function(k, list) {
+      $.each(list, function(i, v) {
+        v.target.off(v.event, v.listener)
+      })
     })
   }
 
@@ -204,7 +274,18 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
         var coords = coordinatesFromHexStr(hexStr)
         that.dropCircle(coords.x, coords.y, that.remoteCircle)
       },
-      RTCCERASE: that.erase.bind(that)
+      RTCCERASE: that.erase.bind(that),
+      RTCCDRAW: function(hexStr) {
+        if (isOutOfBox(hexStr)) {
+          previousDrawCoordinatesReceived = false;
+          return
+        }
+        var coords = coordinatesFromHexStr(hexStr)
+        if (previousDrawCoordinatesReceived) {
+          that.drawLine(previousDrawCoordinatesReceived, coords, that.color.receive)
+        }
+        previousDrawCoordinatesReceived = coords
+      }
     }, function(key, listener) {
       if (message.search(key) === 0) {
         listener(message.replace(key, ''))
