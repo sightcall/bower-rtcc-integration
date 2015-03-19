@@ -1,10 +1,43 @@
-# Use with bower
+# Use 
+
+## Install with bower
 
 Install `bower install rtcc-integration --save`
 
-The files are now in your `bower_components/rtccintegration` folder.
+The files are now in your `bower_components/rtcc-integration/dist` folder.
 
-Donc forget to include the dependancies when you use this lib.
+Dont forget to include the dependancies, which were automatically installed next to the previous folder.
+
+## Draw on video
+
+You can draw on the video with the plugin or webrtc.
+
+```
+rtcc.on('plugin.load', function() {
+  use_draw = true;
+});
+rtcc.on('webrtc.connect', function() {
+  use_draw = true;
+});
+rtcc.on('driver.connect', function() {
+  use_draw = false;
+  draw = false;
+});
+
+
+rtcc.onCallHandler = function(call, infoObj) {
+  if (infoObj.status === "active" && use_draw) {
+    drawObject = new RtccInt.Draw(rtcc, call);
+  }
+};
+```
+
+Then, choose a drawning mode:
+
+```
+this.draw.setMode('Rtcc.annotationMode.<yourMode>');
+```
+
 
 # Work on this project
 
