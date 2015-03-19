@@ -1,10 +1,15 @@
 {
-  "name": "rtccint",
+  "name": "rtcc-integration",
   "version": "1.0.2",
+  "main": [
+    "dist/css/main.css", 
+    "dist/img/*", 
+    "dist/rtccint.js" 
+  ],
   "authors": [
     "raphael-boucher <raphael.boucher@hotmail.fr>"
   ],
-  "description": "A library for an easier Rtcc integration, with composite features.",
+  "description": "A library for an easier Rtcc integration, with customizable features. Draw on video, chat...",
   "keywords": [
     "sightcall",
     "rtcc",
