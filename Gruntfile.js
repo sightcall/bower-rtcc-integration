@@ -44,8 +44,8 @@ module.exports = function(grunt) {
       },
       dist: {
         src: [
-          'bower_components/jquery/dist/jquery.js',
-          'bower_components/css-element-queries/src/ResizeSensor.js',
+          //'bower_components/jquery/dist/jquery.js',
+          //'bower_components/css-element-queries/src/ResizeSensor.js',
           'src/rtccint.js',
           'src/RtccInt/**',
         ],

@@ -1,9 +1,11 @@
 {
   "name": "rtcc-integration",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": [
     "dist/css/main.css", 
-    "dist/img/*", 
+    "dist/img/drop_green.png", 
+    "dist/img/drop_orange.png", 
+    "dist/img/pointer.png", 
     "dist/rtccint.js" 
   ],
   "authors": [
