@@ -1,6 +1,6 @@
 # Use with bower
 
-TODO
+bower install rtcc-integration
 
 # Work on this project
 
