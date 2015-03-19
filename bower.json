@@ -1,6 +1,6 @@
 {
   "name": "rtcc-integration",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": [
     "dist/css/main.css", 
     "dist/img/*", 
