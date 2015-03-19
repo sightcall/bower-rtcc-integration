@@ -12,7 +12,7 @@ Dont forget to include the dependancies, which were automatically installed next
 
 You can draw on the video with the plugin or webrtc.
 
-```
+```javascript
 rtcc.on('plugin.load', function() {
   use_draw = true;
 });
@@ -34,7 +34,7 @@ rtcc.onCallHandler = function(call, infoObj) {
 
 Then, choose a drawning mode:
 
-```
+```javascript
 this.draw.setMode('Rtcc.annotationMode.<yourMode>');
 ```
 
