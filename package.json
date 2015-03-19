@@ -15,6 +15,7 @@
     "grunt-jsdoc": "^0.5.8",
     "load-grunt-tasks": "^3.1.0",
     "grunt-contrib-copy": "^0.8.0",
-    "grunt-ssh": "^0.12.1"
+    "grunt-ssh": "^0.12.1",
+    "grunt-bump": "^0.3.0"
   }
 }
