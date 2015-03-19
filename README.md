@@ -1,6 +1,8 @@
 # Use with bower
 
-bower install rtcc-integration
+Install `bower install rtcc-integration`
+The files are now in your `bower_components/rtccintegration` folder.
+Donc forget to include the dependancies when you use this lib.
 
 # Work on this project
 
