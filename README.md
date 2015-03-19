@@ -1,6 +1,6 @@
 # Use with bower
 
-Install `bower install rtcc-integration`
+Install `bower install rtcc-integration --save`
 
 The files are now in your `bower_components/rtccintegration` folder.
 

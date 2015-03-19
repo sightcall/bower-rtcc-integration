@@ -25,8 +25,13 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests",
+    "spec",
+    "assets",
+    "src",
+    "package.json",
+    "bower.json",
+    "Gruntfile.js",
+    "config_example.json",
     "config.json"
   ],
   "dependencies": {
