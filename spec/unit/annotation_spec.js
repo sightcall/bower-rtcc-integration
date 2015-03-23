@@ -5,9 +5,15 @@ describe('draw module', function() {
   var ctxPtr
 
   beforeEach(function() {
-    $('body').append('<div class="rtcc-videobox" style="position:absolute; width: 50px; height : 50px; background:black;"></div>')
+    $('body').append(
+      '<div class="rtcc-videobox" style="position:absolute; width: 50px; height :\
+     50px; background:black;"><div class="rtcc-active-video-container" style="position: absolute; height: 100%; width: 100%;"></div></div>'
+    )
     rtcc = {
-      on: jasmine.createSpy('on')
+      on: jasmine.createSpy('on'),
+      getConnectionMode: function() {
+        return Rtcc.connectionModes.PLUGIN
+      }
     }
     ctxPtr = {
       drawImage: jasmine.createSpy('drawImage'),
@@ -15,7 +21,7 @@ describe('draw module', function() {
     }
 
     draw = new RtccInt.Draw(rtcc, callObject);
-    draw.setMode(Rtcc.annotationMode.POINTER);
+    draw.setMode(RtccInt.annotationMode.POINTER);
     draw.ctxPtr = ctxPtr;
   });
 
@@ -26,8 +32,8 @@ describe('draw module', function() {
 
 
   it('set mode', function() {
-    draw.setMode(Rtcc.annotationMode.POINTER)
-    expect(draw.getMode()).toBe(Rtcc.annotationMode.POINTER)
+    draw.setMode(RtccInt.annotationMode.POINTER)
+    expect(draw.getMode()).toBe(RtccInt.annotationMode.POINTER)
   });
 
 
@@ -43,7 +49,7 @@ describe('draw module', function() {
 
   it('handle out of screen pointer', function() {
     var handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
-    handleInbandMessage('RTCCPTRFFFFFFFF') //50% 50%
+    handleInbandMessage('RTCCPTRFFFFFFFF')
     expect(ctxPtr.drawImage).not.toHaveBeenCalled()
   });
 

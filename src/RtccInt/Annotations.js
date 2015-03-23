@@ -1,5 +1,29 @@
-RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+/**
+ * Modes you can set for annotations on screenshare
+ * @readonly
+ * @enum {string}
+ **/
+RtccInt.annotationMode = {
+  /** The mouse pointer will be displayed on the subject **/
+  POINTER: "pointer",
+  /** A right button mouse hold will draw at the current mouse position **/
+  DRAW: "draw",
+  /**  A right click will draw a circle around the point selected **/
+  DROP: "drop"
+};
 
+
+/**
+ * @param {Rtcc} rtccObject The object with the connexion to the cloud
+ * @param {callObject} callObject The call involved in the drawing
+ * @param {object} settings - These settings are optionals.
+ * @param {DOMobject|jQueryObject} [settings.container] The container where the drawing will take place.
+ *                                                      The default right click menu will be disabled. Default is the videobox.
+ * @param {string} [settings.pointerSrc] The relative URL to the pointer image
+ * @param {string} [settings.remoteCircleSrc] The relative URL to the circle displayed locally when received from the callee
+ * @param {string} [settings.localCircleSrc] The relative URL to the circle displayed locally when sending a circle
+ *
+ */
 RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   'use strict'
 
@@ -8,14 +32,14 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
   settings.remoteCircleSrc = settings.remoteCircleSrc || RtccInt.scriptpath + 'img/drop_green.png';
   settings.localCircleSrc = settings.localCircleSrc || RtccInt.scriptpath + 'img/drop_orange.png';
+  settings.container = settings.container ? $(settings.container) : $('.rtcc-videobox .rtcc-active-video-container').first();
 
-  //GLOBAL
+  //LOCAL
   var that = this;
   var allCanvas = {
     pointer: $('<canvas class="rtccint-pointer" />'),
     annotations: $('<canvas class="rtccint-annotations" />')
   }
-  var videobox = $('.rtcc-videobox').first();
   var currentMode;
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
@@ -44,28 +68,15 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   //PUBLIC
   this.setMode = function(mode) {
     currentMode = mode;
-    updateModeListener();
+    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
+      rtccObject.sendMessageToDriver(
+        '<controlcall id="' + callObject.callId + '"><callpointer mode="' + mode + '"></callpointer></controlcall>')
+    else
+      updateModeListener();
   }
 
   this.getMode = function() {
     return currentMode;
-  }
-
-  this._percentToHex = function(percent) {
-    var hex;
-    if (0 <= percent && percent <= 100) {
-      hex = Math.round(percent / 100 * parseInt('FFFE', 16)).toString(16).toUpperCase();
-      while (hex.length < 4) {
-        hex = '0' + hex;
-      }
-    } else {
-      hex = 'FFFF';
-    }
-    return hex
-  }
-
-  this._hexToPercent = function(hex) {
-    return parseInt(hex, 16) / hexHundredPercent * 100;
   }
 
   this.setPointer = function(x, y) {
@@ -78,7 +89,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   }
 
   this.dropCircle = function(x, y, circle) {
-    var ratio = videobox.width() * this.circleRatioTovideobox / circle.width
+    var ratio = settings.container.width() * this.circleRatioTovideobox / circle.width
     var drawnCircleWidth = Math.round(circle.width * ratio)
     var drawnCircleHeight = Math.round(circle.height * ratio)
     this.ctxDraw.drawImage(
@@ -100,7 +111,11 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   }
 
   this.erase = function() {
-    this.ctxDraw.clearRect(0, 0, allCanvas.annotations.width(), allCanvas.annotations.height());
+    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
+      rtccObject.sendMessageToDriver(
+        '<controlcall id="' + callObject.callId + '"><callpointer>clear</callpointer></controlcall>')
+    else
+      this.ctxDraw.clearRect(0, 0, allCanvas.annotations.width(), allCanvas.annotations.height());
   }
 
   this.destroy = function() {
@@ -108,6 +123,25 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     $.each(allCanvas, function(k, v) {
       v.remove();
     })
+  }
+
+
+  //PROTECTED
+  this._percentToHex = function(percent) {
+    var hex;
+    if (0 <= percent && percent <= 100) {
+      hex = Math.round(percent / 100 * parseInt('FFFE', 16)).toString(16).toUpperCase();
+      while (hex.length < 4) {
+        hex = '0' + hex;
+      }
+    } else {
+      hex = 'FFFF';
+    }
+    return hex
+  }
+
+  this._hexToPercent = function(hex) {
+    return parseInt(hex, 16) / hexHundredPercent * 100;
   }
 
 
@@ -120,8 +154,8 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   //this also erase all the canvas content...
   function updateCanvasSize() {
     $.each(allCanvas, function(k, canvas) {
-      canvas[0].width = videobox.width()
-      canvas[0].height = videobox.height()
+      canvas[0].width = settings.container.width()
+      canvas[0].height = settings.container.height()
     })
     updateContexts();
   }
@@ -144,10 +178,10 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   //https://github.com/weemo/Mobile/blob/feature-scheme/scheme.md
   //works for any videobox position
   function mouseCoordToHex(x, y) {
-    var xOffset = x - videobox.offset().left;
-    var yOffset = y - videobox.offset().top;
-    var hexX = that._percentToHex(xOffset / videobox.width() * 100)
-    var hexY = that._percentToHex(yOffset / videobox.height() * 100)
+    var xOffset = x - settings.container.offset().left;
+    var yOffset = y - settings.container.offset().top;
+    var hexX = that._percentToHex(xOffset / settings.container.width() * 100)
+    var hexY = that._percentToHex(yOffset / settings.container.height() * 100)
     return hexX === 'FFFF' || hexY === 'FFFF' ? 'FFFFFFFF' : hexX + hexY;
   }
 
@@ -185,14 +219,14 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
 
   //event listeners
   var modeListeners = {};
-  modeListeners[Rtcc.annotationMode.POINTER] = [{
+  modeListeners[RtccInt.annotationMode.POINTER] = [{
     event: 'mousemove',
     target: $(document),
     listener: pointerMouseListener
   }]
-  modeListeners[Rtcc.annotationMode.DROP] = [{
+  modeListeners[RtccInt.annotationMode.DROP] = [{
     event: 'mousedown',
-    target: videobox,
+    target: settings.container,
     listener: function(event) {
       if (event.which === 3) {
         var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
@@ -202,9 +236,9 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
       }
     }
   }]
-  modeListeners[Rtcc.annotationMode.DRAW] = [{
+  modeListeners[RtccInt.annotationMode.DRAW] = [{
     event: 'mousedown',
-    target: videobox,
+    target: settings.container,
     listener: function(event) {
       if (event.which === 3) {
         rightMouseDown = true
@@ -216,7 +250,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     }
   }, {
     event: 'mouseup',
-    target: videobox,
+    target: settings.container,
     listener: function(event) {
       if (event.which === 3) {
         rightMouseDown = false
@@ -297,20 +331,19 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     if (typeof ResizeSensor !== 'function')
       throw 'Missing css-element-queries dependency. You can find it in the bower_components folder.'
 
-    new ResizeSensor(videobox, updateCanvasSize);
-    if (videobox.attr('style').indexOf('position: relative') !== -1) {
-      videobox.css('position', 'fixed')
-    }
+    new ResizeSensor(settings.container, updateCanvasSize);
   }
 
 
   function init() {
-    if (!videobox) throw 'RtccInt.Draw needs a videobox to draw.';
+    if (rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER && !settings.container)
+      throw 'RtccInt.Draw needs a container to put the drawing.';
+
     //context menu disable right click
-    videobox.attr('oncontextmenu', 'return false')
+    settings.container.attr('oncontextmenu', 'return false')
 
     $.each(allCanvas, function(k, v) {
-      videobox.append(v);
+      settings.container.append(v);
     })
 
     rtccObject.on('message.inband', handleInbandMessage);

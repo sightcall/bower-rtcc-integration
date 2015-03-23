@@ -1,8 +1,8 @@
 var Rtcc = {
-  annotationMode: {
-    POINTER: 'pointer',
-    DRAW: 'draw',
-    DROP: 'drop'
+  connectionModes: {
+    DRIVER: 'driver',
+    PLUGIN: 'plugin',
+    WEBRTC: 'webrtc'
   }
 }
 
