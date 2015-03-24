@@ -2,23 +2,32 @@
 
 ## Compatibility
 
-**Require the RTCC API version 6.1.7 or higher**.
+**The RTCC API version 6.1.7 or higher is required**.
 
 ## Install with bower
 
-Install `bower install rtcc-integration --save`
+Install with: `bower install rtcc-integration --save`
 
 Include the file `bower_components/rtcc-integration/dist/RtccInt.js` to your project.
 
-This project depends upon `css-element-queries` which has been downloaded in a folder in `bower_components`.
-Include the library `bower_components/css-element-queries/src/ResizeSensor.js` in your project.
+The `Annotation` module depends upon `css-element-queries` which has been downloaded in a folder in `bower_components`.
+If you want to use it, include the library `bower_components/css-element-queries/src/ResizeSensor.js` in your project.
 
 You are now ready to go!
 
-## Draw on video
 
-You can draw on the video with the plugin or webrtc.
+## Generate the doc
 
+`grunt jsdoc`
+
+The result is in the `doc` folder
+
+
+## Annotation
+
+With this module, you can draw on the video or another element.
+
+A basic example that enables annotations on the video box:
 ```javascript
 var annotation;
 call.on('active', function(){
@@ -31,6 +40,13 @@ Then, choose an annotation mode, for example:
 ```javascript
 annotation.setMode('Rtcc.annotationMode.DRAW');
 ```
+
+This module is compatible with all connexion client types offered in RTCC: webrtc, driver, plugin.
+
+## Chat
+
+TODO
+
 
 # Contribute
 

@@ -22,8 +22,3 @@ Before commit
 
 `grunt prepare`
 
-## Generate the doc
-
-`grunt jsdoc`
-
-The result is in the `doc` folder
