@@ -1,69 +1,37 @@
 # Use 
 
+## Compatibility
+
+**Require the RTCC API version 6.1.7 or higher**.
+
 ## Install with bower
 
 Install `bower install rtcc-integration --save`
 
-The files are now in your `bower_components/rtcc-integration/dist` folder.
+Include the file `bower_components/rtcc-integration/dist/RtccInt.js` to your project.
 
-Dont forget to include the dependancies, which were automatically installed next to the previous folder.
+This project depends upon `css-element-queries` which has been downloaded in a folder in `bower_components`.
+Include the library `bower_components/css-element-queries/src/ResizeSensor.js` in your project.
+
+You are now ready to go!
 
 ## Draw on video
 
 You can draw on the video with the plugin or webrtc.
 
 ```javascript
-rtcc.on('plugin.load', function() {
-  use_draw = true;
-});
-rtcc.on('webrtc.connect', function() {
-  use_draw = true;
-});
-rtcc.on('driver.connect', function() {
-  use_draw = false;
-  draw = false;
-});
-
-
-rtcc.onCallHandler = function(call, infoObj) {
-  if (infoObj.status === "active" && use_draw) {
-    drawObject = new RtccInt.Draw(rtcc, call);
-  }
-};
+var annotation;
+call.on('active', function(){
+  annotation = new RtccInt.Annotation(rtcc, call);
+})
 ```
 
-Then, choose a drawning mode:
+Then, choose an annotation mode, for example:
 
 ```javascript
-this.draw.setMode('Rtcc.annotationMode.<yourMode>');
+annotation.setMode('Rtcc.annotationMode.DRAW');
 ```
 
+# Contribute
 
-# Work on this project
-
-install Grunt, then
-
-`npm install`
-
-`bower install`
-
-`grunt watch`
-
-The result is in `dist`
-
-## Setup git
-
-Install git hook with
-
-`grunt githooks`
-
-
-Before commit
-
-`grunt prepare`
-
-## Generate the doc
-
-`grunt jsdoc`
-
-The result is in the `doc` folder
+See [here](contribute.md) how to improve this project.

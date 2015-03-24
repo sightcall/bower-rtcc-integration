@@ -7,12 +7,15 @@ describe('draw module', function() {
   beforeEach(function() {
     $('body').append(
       '<div class="rtcc-videobox" style="position:absolute; width: 50px; height :\
-     50px; background:black;"><div class="rtcc-active-video-container" style="position: absolute; height: 100%; width: 100%;"></div></div>'
+      50px; background: black;"><div class="rtcc-active-video-container" style="position: absolute; height: 100%; width: 100%;"></div></div>'
     )
     rtcc = {
       on: jasmine.createSpy('on'),
       getConnectionMode: function() {
         return Rtcc.connectionModes.PLUGIN
+      },
+      getRtccUserType: function() {
+        return 'internal'
       }
     }
     ctxPtr = {
@@ -20,8 +23,8 @@ describe('draw module', function() {
       clearRect: jasmine.createSpy('clearRect')
     }
 
-    draw = new RtccInt.Draw(rtcc, callObject);
-    draw.setMode(RtccInt.annotationMode.POINTER);
+    draw = new RtccInt.Annotation(rtcc, callObject);
+    draw.setMode(RtccInt.Annotation.modes.POINTER);
     draw.ctxPtr = ctxPtr;
   });
 
@@ -32,8 +35,8 @@ describe('draw module', function() {
 
 
   it('set mode', function() {
-    draw.setMode(RtccInt.annotationMode.POINTER)
-    expect(draw.getMode()).toBe(RtccInt.annotationMode.POINTER)
+    draw.setMode(RtccInt.Annotation.modes.POINTER)
+    expect(draw.getMode()).toBe(RtccInt.Annotation.modes.POINTER)
   });
 
 

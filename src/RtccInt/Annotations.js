@@ -1,38 +1,51 @@
 /**
- * Modes you can set for annotations on screenshare
- * @readonly
- * @enum {string}
- **/
-RtccInt.annotationMode = {
-  /** The mouse pointer will be displayed on the subject **/
-  POINTER: "pointer",
-  /** A right button mouse hold will draw at the current mouse position **/
-  DRAW: "draw",
-  /**  A right click will draw a circle around the point selected **/
-  DROP: "drop"
-};
-
-
-/**
- * @param {Rtcc} rtccObject The object with the connexion to the cloud
- * @param {callObject} callObject The call involved in the drawing
- * @param {object} settings - These settings are optionals.
- * @param {DOMobject|jQueryObject} [settings.container] The container where the drawing will take place.
- *                                                      The default right click menu will be disabled. Default is the videobox.
- * @param {string} [settings.pointerSrc] The relative URL to the pointer image
- * @param {string} [settings.remoteCircleSrc] The relative URL to the circle displayed locally when received from the callee
- * @param {string} [settings.localCircleSrc] The relative URL to the circle displayed locally when sending a circle
+ * Allow the user to annotate inside an HTML element. The default element is the videobox.
+ * @class
  *
+ * @see  RtccInt#Annotation.modes
+ *
+ * @param {Rtcc} rtccObject The object with the connexion to the cloud
+ * @param {RtccCall} callObject The call involved in the drawing
+ * @param {object} [settings]
+ * @param {(DOMobject|jQueryObject)} [settings.container=videobox] The container where the drawing will take place.
+ *                                                               The default right click menu will be disabled.
+ * @param {string} [settings.pointerSrc=a red pointer] The relative URL to the pointer image
+ * @param {object} [settings.circles]
+ * @param {string} [settings.circles.premium="orange circle"] The absolute URL to the circle of the premium user.
+ * @param {string} [settings.circles.external=green circle] The absolute URL to the circle of the external user.
+ * @param {object} [settings.colors]
+ * @param {colorRGBA} [settings.colors.premium=[255,174,0,255](orange)] The color drawn by the premium user.
+ * @param {colorRGBA} [settings.colors.external=[114,255,0,255](green)] The color drawn by the external user.
+ *
+ * @example
+ * //draw on the videobox
+ * var annotation;
+ * call.on('active', function(){
+ *   annotation = RtccInt.Annotation(rtcc, call);
+ *   annotation.setMode(RtccInt.Annotation.modes.DRAW);
+ * })
  */
-RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
+RtccInt.Annotation = function(rtccObject, callObject, settings) {
   'use strict'
 
   //DEFAULT VALUES
   settings = settings || {};
-  settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
-  settings.remoteCircleSrc = settings.remoteCircleSrc || RtccInt.scriptpath + 'img/drop_green.png';
-  settings.localCircleSrc = settings.localCircleSrc || RtccInt.scriptpath + 'img/drop_orange.png';
   settings.container = settings.container ? $(settings.container) : $('.rtcc-videobox .rtcc-active-video-container').first();
+  settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
+  var defaultCircles = {
+    external: RtccInt.scriptpath + 'img/drop_green.png',
+    premium: RtccInt.scriptpath + 'img/drop_orange.png'
+  }
+  settings.circles = settings.circle || defaultCircles;
+  settings.circles.premium = settings.circles.premium || defaultCircles.premium;
+  settings.circles.external = settings.circles.external || defaultCircles.external;
+  var defaultColors = {
+    external: [114, 255, 0, 255],
+    premium: [255, 174, 0, 255]
+  }
+  settings.colors = settings.colors || defaultColors;
+  settings.colors.premium = settings.colors.premium || defaultColors.premium;
+  settings.colors.external = settings.colors.external || defaultColors.external;
 
   //LOCAL
   var that = this;
@@ -48,24 +61,37 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
   var previousDrawCoordinatesReceived = false;
   var previousDrawCoordinatesSent = false;
   var rightMouseDown = false;
+  var isExternal = rtccObject.getRtccUserType() === 'external';
 
   //ATTRIBUTES
   this.ctxPtr = false;
   this.ctxDraw = false;
   this.pointerDelay = 50; //in ms
-  this.circleRatioTovideobox = 0.15;
+
+  /**
+   * @property {Number} [circleRatioToContainer=0.15] - Ratio of the circle size compared to the container size
+   */
+  this.circleRatioToContainer = 0.15;
   this.pointer = new Image();
   this.pointer.src = settings.pointerSrc;
-  this.remoteCircle = new Image()
-  this.remoteCircle.src = settings.remoteCircleSrc;
-  this.localCircle = new Image()
-  this.localCircle.src = settings.localCircleSrc;
-  this.color = {
-    receive: [114, 255, 0, 255],
-    send: [255, 174, 0, 255]
+  this.drawing = {
+    local: {
+      circle: new Image(),
+      color: isExternal ? settings.colors.external : settings.colors.premium
+    },
+    remote: {
+      circle: new Image(),
+      color: isExternal ? settings.colors.premium : settings.colors.external
+    }
   }
+  this.drawing.local.circle.src = isExternal ? settings.circles.external : settings.circles.premium;
+  this.drawing.remote.circle.src = isExternal ? settings.circles.premium : settings.circles.external;
 
   //PUBLIC
+  /**
+   * Choose the annotation mode
+   * @param {RtccInt.Annotation.modes} mode - Change the annotation mode.
+   */
   this.setMode = function(mode) {
     currentMode = mode;
     if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
@@ -75,21 +101,39 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
       updateModeListener();
   }
 
+  /**
+   *
+   * @return {RtccInt.Annotation.modes} The current annotation mode.
+   */
   this.getMode = function() {
     return currentMode;
   }
 
+  /**
+   * Move the pointer to the specified location
+   * @param {int} x - Number of pixels from the left of the canvas
+   * @param {int} y - Number of pixels from the top of the canvas
+   */
   this.setPointer = function(x, y) {
     this.cleanPointer();
     this.ctxPtr.drawImage(that.pointer, x - that.pointer.width / 2, y - that.pointer.height / 2)
   }
 
+  /**
+   * Removes the pointer from the canvas
+   */
   this.cleanPointer = function() {
     this.ctxPtr.clearRect(0, 0, allCanvas.pointer.width(), allCanvas.pointer.height());
   }
 
+  /**
+   * Draws an image centered on (x,y). The picture is resized according to {@link RtccInt.Annotation#circleRatioToContainer}
+   * @param {int} x - Number of pixels from the left of the canvas
+   * @param {int} y - Number of pixels from the top of the canvas
+   * @param  {imageObject} circle The circle to be drawn
+   */
   this.dropCircle = function(x, y, circle) {
-    var ratio = settings.container.width() * this.circleRatioTovideobox / circle.width
+    var ratio = settings.container.width() * this.circleRatioToContainer / circle.width
     var drawnCircleWidth = Math.round(circle.width * ratio)
     var drawnCircleHeight = Math.round(circle.height * ratio)
     this.ctxDraw.drawImage(
@@ -101,6 +145,16 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     )
   }
 
+  /**
+   * Draw a line of the chosen color between two given points
+   * @param  {object} from - Coordinates of the starting point
+   * @param  {int} from.x - Number of pixels from the left of the canvas
+   * @param  {int} from.y - Number of pixels from the top of the canvas
+   * @param  {object} to - Coordinates of the ending point
+   * @param  {int} to.x - Number of pixels from the left of the canvas
+   * @param  {int} to.y - Number of pixels from the top of the canvas
+   * @param  {colorRGBA} color - The color of the line
+   */
   this.drawLine = function(from, to, color) {
     this.ctxDraw.beginPath();
     this.ctxDraw.moveTo(from.x, from.y);
@@ -110,6 +164,9 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     this.ctxDraw.stroke();
   }
 
+  /**
+   * Erase all drawings made on both sides
+   */
   this.erase = function() {
     if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
       rtccObject.sendMessageToDriver(
@@ -118,6 +175,14 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
       this.ctxDraw.clearRect(0, 0, allCanvas.annotations.width(), allCanvas.annotations.height());
   }
 
+  /**
+   * Removes the canvas and all callbacks previously set by this instance.
+   * @returns {undefined}
+   * @example
+   * var annotation = new RtccInt.Annotation(rtcc, call);
+   * //override the variable holding the object allows the browser to remove it from memory.
+   * annotation = annotation.destroy();
+   */
   this.destroy = function() {
     removeModeListeners();
     $.each(allCanvas, function(k, v) {
@@ -219,12 +284,12 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
 
   //event listeners
   var modeListeners = {};
-  modeListeners[RtccInt.annotationMode.POINTER] = [{
+  modeListeners[RtccInt.Annotation.modes.POINTER] = [{
     event: 'mousemove',
     target: $(document),
     listener: pointerMouseListener
   }]
-  modeListeners[RtccInt.annotationMode.DROP] = [{
+  modeListeners[RtccInt.Annotation.modes.DROP] = [{
     event: 'mousedown',
     target: settings.container,
     listener: function(event) {
@@ -232,11 +297,11 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
         var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
         rtccObject.sendInbandMessage('RTCCDROP' + hexCoords);
         var coords = coordinatesFromHexStr(hexCoords)
-        that.dropCircle(coords.x, coords.y, that.localCircle)
+        that.dropCircle(coords.x, coords.y, that.drawing.local.circle)
       }
     }
   }]
-  modeListeners[RtccInt.annotationMode.DRAW] = [{
+  modeListeners[RtccInt.Annotation.modes.DRAW] = [{
     event: 'mousedown',
     target: settings.container,
     listener: function(event) {
@@ -269,7 +334,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
         } else {
           var coords = coordinatesFromHexStr(hexStr)
           if (previousDrawCoordinatesSent)
-            that.drawLine(previousDrawCoordinatesSent, coords, that.color.send)
+            that.drawLine(previousDrawCoordinatesSent, coords, that.drawing.local.color)
           previousDrawCoordinatesSent = coords
         }
       }
@@ -306,7 +371,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
       },
       RTCCDROP: function(hexStr) {
         var coords = coordinatesFromHexStr(hexStr)
-        that.dropCircle(coords.x, coords.y, that.remoteCircle)
+        that.dropCircle(coords.x, coords.y, that.drawing.remote.circle)
       },
       RTCCERASE: that.erase.bind(that),
       RTCCDRAW: function(hexStr) {
@@ -316,7 +381,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
         }
         var coords = coordinatesFromHexStr(hexStr)
         if (previousDrawCoordinatesReceived) {
-          that.drawLine(previousDrawCoordinatesReceived, coords, that.color.receive)
+          that.drawLine(previousDrawCoordinatesReceived, coords, that.drawing.remote.color)
         }
         previousDrawCoordinatesReceived = coords
       }
@@ -329,7 +394,7 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
 
   function startResizeSensor() {
     if (typeof ResizeSensor !== 'function')
-      throw 'Missing css-element-queries dependency. You can find it in the bower_components folder.'
+      throw new Error('Missing css-element-queries dependency. You can find it in the bower_components folder.')
 
     new ResizeSensor(settings.container, updateCanvasSize);
   }
@@ -347,9 +412,29 @@ RtccInt.Draw = function(rtccObject, callObject, isExternal, settings) {
     })
 
     rtccObject.on('message.inband', handleInbandMessage);
+    callObject.on('terminate', function() {
+      $.each(allCanvas, function(k, v) {
+        v.remove();
+      })
+    });
     startResizeSensor();
     updateCanvasSize();
   }
 
   init();
 }
+
+
+/**
+ * Modes you can set for annotations on screenshare
+ * @readonly
+ * @enum {string}
+ **/
+RtccInt.Annotation.modes = {
+  /** The mouse pointer will be displayed on the subject **/
+  POINTER: "pointer",
+  /** A right button mouse hold will draw at the current mouse position **/
+  DRAW: "draw",
+  /**  A right click will draw a circle around the point selected **/
+  DROP: "drop"
+};

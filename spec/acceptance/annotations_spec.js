@@ -1,8 +1,7 @@
 describe('annotations module', function() {
   'use strict'
-  var draw;
+  var annotation;
   var rtcc;
-  var callObject;
   var handleInbandMessage;
   var videobox
   var videoboxActive
@@ -22,26 +21,25 @@ describe('annotations module', function() {
         return 'plugin';
       },
       sendInbandMessage: jasmine.createSpy('sendInbandMessage'),
-      sendMessageToDriver: jasmine.createSpy('sendMessageToDriver')
+      sendMessageToDriver: jasmine.createSpy('sendMessageToDriver'),
+      getRtccUserType: function() {
+        return 'internal'
+      }
     };
-    callObject = {
-      callId: 'call_id',
-      callPointer: jasmine.createSpy('callPointer')
-    }
 
-    draw = new RtccInt.Draw(rtcc, callObject, true)
+    annotation = new RtccInt.Annotation(rtcc, callObject)
     handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
   });
 
   afterEach(function() {
     videobox.remove();
-    draw.destroy();
+    annotation.destroy();
   })
 
   function hasPointerDrawn(xPercent, yPercent) {
     var x = Math.round(xPercent * videoboxActive.width() / 100)
     var y = Math.round(yPercent * videoboxActive.height() / 100)
-    var data = draw.ctxPtr.getImageData(x, y, 1, 1).data;
+    var data = annotation.ctxPtr.getImageData(x, y, 1, 1).data;
     return isColorCorrectish(data, [219, 219, 219, 201])
   }
 
@@ -72,7 +70,7 @@ describe('annotations module', function() {
   describe('pointer', function() {
     describe('draw pointer', function() {
       it('draws the pointer in the correct place', function(done) {
-        draw.pointer.onload = function() {
+        annotation.pointer.onload = function() {
           handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
           expect(hasPointerDrawn(50, 50)).toBe(true)
           done();
@@ -80,7 +78,7 @@ describe('annotations module', function() {
       });
 
       it('can draw after resize', function(done) {
-        draw.pointer.onload = function() {
+        annotation.pointer.onload = function() {
           videoboxActive.width(videobox.width() * 2)
           videoboxActive.height(videobox.height() / 2)
             //we have to wait for the resize event to be managed
@@ -93,9 +91,9 @@ describe('annotations module', function() {
       })
 
       it('draws only one pointer at a time', function(done) {
-        draw.pointer.onload = function() {
+        annotation.pointer.onload = function() {
           handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
-          handleInbandMessage('RTCCPTR' + draw._percentToHex(10) + draw._percentToHex(10)) //0 0
+          handleInbandMessage('RTCCPTR' + annotation._percentToHex(10) + annotation._percentToHex(10)) //0 0
           expect(hasPointerDrawn(50, 50)).toBe(false)
           expect(hasPointerDrawn(10, 10)).toBe(true)
           done();
@@ -105,7 +103,7 @@ describe('annotations module', function() {
 
     describe('send pointer coordinates', function() {
       beforeEach(function() {
-        draw.setMode(RtccInt.annotationMode.POINTER);
+        annotation.setMode(RtccInt.Annotation.modes.POINTER);
       });
       it('with offset', function() {
 
@@ -149,35 +147,35 @@ describe('annotations module', function() {
     function hasCircleDrawn(xPercent, yPercent, expectedData) {
       var x = Math.round(xPercent * videoboxActive.width() / 100)
       var y = Math.round(yPercent * videoboxActive.height() / 100)
-      var trueHeight = videoboxActive.height() * draw.circleRatioTovideobox;
-      var data = draw.ctxDraw.getImageData(x, y - Math.round(trueHeight * 16 / 46), 1, 1).data;
+      var trueHeight = videoboxActive.height() * annotation.circleRatioToContainer;
+      var data = annotation.ctxDraw.getImageData(x, y - Math.round(trueHeight * 16 / 46), 1, 1).data;
       return isColorCorrectish(data, expectedData)
     }
 
-    function hasRemoteCircleDrawn(xPercent, yPercent) {
+    function hasExternalCircleDrawn(xPercent, yPercent) {
       return hasCircleDrawn(xPercent, yPercent, [150, 254, 70, 255])
     }
 
-    function hasLocalCircleDrawn(xPercent, yPercent) {
+    function hasPremiumCircleDrawn(xPercent, yPercent) {
       return hasCircleDrawn(xPercent, yPercent, [255, 169, 60, 255])
     }
 
 
     describe('receive drop', function() {
       it('draws a circle', function(done) {
-        draw.remoteCircle.onload = function() {
+        annotation.drawing.remote.circle.onload = function() {
           handleInbandMessage('RTCCDROP7FFF7FFF') //50% 50%
-          expect(hasRemoteCircleDrawn(50, 50)).toBe(true)
+          expect(hasExternalCircleDrawn(50, 50)).toBe(true)
           done();
         }
       });
 
       it('can be erased', function(done) {
-        draw.remoteCircle.onload = function() {
+        annotation.drawing.remote.circle.onload = function() {
           handleInbandMessage('RTCCDROP7FFF7FFF') //50% 50%
-          expect(hasRemoteCircleDrawn(50, 50)).toBe(true)
+          expect(hasExternalCircleDrawn(50, 50)).toBe(true)
           handleInbandMessage('RTCCERASE') //50% 50%
-          expect(hasRemoteCircleDrawn(50, 50)).toBe(false)
+          expect(hasExternalCircleDrawn(50, 50)).toBe(false)
           done();
         }
       })
@@ -187,7 +185,7 @@ describe('annotations module', function() {
 
     describe('right click', function() {
       beforeEach(function() {
-        draw.setMode(RtccInt.annotationMode.DROP);
+        annotation.setMode(RtccInt.Annotation.modes.DROP);
       });
 
       it('sends drop', function() {
@@ -196,9 +194,9 @@ describe('annotations module', function() {
       });
 
       it('draws a local circle', function(done) {
-        draw.localCircle.onload = function() {
+        annotation.drawing.local.circle.onload = function() {
           videoboxActive.trigger(rightClickEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5))
-          expect(hasLocalCircleDrawn(50, 50)).toBe(true)
+          expect(hasPremiumCircleDrawn(50, 50)).toBe(true)
           done();
         }
       });
@@ -208,8 +206,8 @@ describe('annotations module', function() {
 
   describe('multiple modes', function() {
     it('switch modes', function() {
-      draw.setMode(RtccInt.annotationMode.DROP);
-      draw.setMode(RtccInt.annotationMode.POINTER);
+      annotation.setMode(RtccInt.Annotation.modes.DROP);
+      annotation.setMode(RtccInt.Annotation.modes.POINTER);
       videoboxActive.trigger(rightClickEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5))
       expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith()
     });
@@ -221,7 +219,7 @@ describe('annotations module', function() {
     function toHaveLine(xPercent, yPercent, expectedData) {
       var x = Math.round(xPercent * videoboxActive.width() / 100)
       var y = Math.round(yPercent * videoboxActive.height() / 100)
-      var data = draw.ctxDraw.getImageData(x, y, 1, 1).data;
+      var data = annotation.ctxDraw.getImageData(x, y, 1, 1).data;
       return isColorCorrectish(data, expectedData)
     }
 
@@ -230,15 +228,15 @@ describe('annotations module', function() {
       it('draws a line between two points', function() {
         handleInbandMessage('RTCCDRAW7FFF7FFF') //50% 50%
         handleInbandMessage('RTCCDRAWFFFE7FFF') //100% 50%
-        expect(toHaveLine(75, 50, draw.color.receive)).toBe(true)
+        expect(toHaveLine(75, 50, annotation.drawing.remote.color)).toBe(true)
       });
 
       it('draws a line between three points', function() {
         handleInbandMessage('RTCCDRAW00007FFF') //00% 50%
         handleInbandMessage('RTCCDRAW7FFF7FFF') //50% 50%
         handleInbandMessage('RTCCDRAW7FFFFFFE') //50% 100%
-        expect(toHaveLine(25, 50, draw.color.receive)).toBe(true)
-        expect(toHaveLine(50, 75, draw.color.receive)).toBe(true)
+        expect(toHaveLine(25, 50, annotation.drawing.remote.color)).toBe(true)
+        expect(toHaveLine(50, 75, annotation.drawing.remote.color)).toBe(true)
       });
 
       it('draws several lines', function() {
@@ -255,8 +253,8 @@ describe('annotations module', function() {
 
         handleInbandMessage('RTCCDRAW7FFF0000') //50% 0%
         handleInbandMessage('RTCCDRAWFFFE0000') //100% 0%
-        expect(toHaveLine(50, 25, draw.color.receive)).toBe(false)
-        expect(toHaveLine(75, 0, draw.color.receive)).toBe(true)
+        expect(toHaveLine(50, 25, annotation.drawing.remote.color)).toBe(false)
+        expect(toHaveLine(75, 0, annotation.drawing.remote.color)).toBe(true)
       })
 
     });
@@ -264,7 +262,7 @@ describe('annotations module', function() {
 
     describe('right click', function() {
       beforeEach(function() {
-        draw.setMode(RtccInt.annotationMode.DRAW);
+        annotation.setMode(RtccInt.Annotation.modes.DRAW);
       });
 
       it('send coordinates', function() {
@@ -289,8 +287,8 @@ describe('annotations module', function() {
         videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5));
         videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 1));
         videoboxActive.trigger(releaseRightClickEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
-        expect(toHaveLine(25, 50, draw.color.send)).toBe(true)
-        expect(toHaveLine(50, 75, draw.color.send)).toBe(true)
+        expect(toHaveLine(25, 50, annotation.drawing.local.color)).toBe(true)
+        expect(toHaveLine(50, 75, annotation.drawing.local.color)).toBe(true)
       });
 
     });
@@ -306,15 +304,15 @@ describe('annotations module', function() {
     });
 
     it('send erase control call to the driver', function() {
-      draw.erase();
+      annotation.erase();
       expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
         '<controlcall id="' + callObject.callId + '"><callpointer>clear</callpointer></controlcall>')
     });
 
     it('send annotation mode to the driver', function() {
-      draw.setMode(RtccInt.annotationMode.DRAW);
+      annotation.setMode(RtccInt.Annotation.modes.DRAW);
       expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
-        '<controlcall id="' + callObject.callId + '"><callpointer mode="' + RtccInt.annotationMode.DRAW +
+        '<controlcall id="' + callObject.callId + '"><callpointer mode="' + RtccInt.Annotation.modes.DRAW +
         '"></callpointer></controlcall>')
     });
 

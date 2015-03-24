@@ -7,7 +7,9 @@ var Rtcc = {
 }
 
 var callObject = {
-  callPointer: jasmine.createSpy('callPointer')
+  callId: 'call_id',
+  callPointer: jasmine.createSpy('callPointer'),
+  on: jasmine.createSpy('on'),
 }
 
 //Chrome and phantomJS might have a small color difference when rendering colors
