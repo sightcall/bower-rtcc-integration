@@ -6,9 +6,9 @@ The **RTCC API version 6.1.7** or higher is required.
 
 ## Install with bower
 
-Install with: `bower install rtcc-integration --save`
+Install with: `bower install rtccint --save`
 
-Include the file `bower_components/rtcc-integration/dist/RtccInt.js` to your project.
+Include the file `bower_components/rtccint/dist/RtccInt.js` to your project.
 
 You are now ready to go!
 
