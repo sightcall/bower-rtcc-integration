@@ -303,19 +303,51 @@ describe('annotations module', function() {
       }
     });
 
-    it('send erase control call to the driver', function() {
-      annotation.erase();
-      expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
-        '<controlcall id="' + callObject.callId + '"><callpointer>clear</callpointer></controlcall>')
+    describe('call pointer', function() {
+
+      beforeEach(function() {
+        annotation = new RtccInt.Annotation(rtcc, callObject, {
+          isShare: false
+        })
+      })
+
+      it('send erase control call to the driver', function() {
+        annotation.erase();
+        expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
+          '<controlcall id="' + callObject.callId + '"><callpointer>clear</callpointer></controlcall>')
+      });
+
+      it('send annotation mode to the driver', function() {
+        annotation.setMode(RtccInt.Annotation.modes.DRAW);
+        expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
+          '<controlcall id="' + callObject.callId + '"><callpointer mode="' + RtccInt.Annotation.modes.DRAW +
+          '"></callpointer></controlcall>')
+      });
+
     });
 
-    it('send annotation mode to the driver', function() {
-      annotation.setMode(RtccInt.Annotation.modes.DRAW);
-      expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
-        '<controlcall id="' + callObject.callId + '"><callpointer mode="' + RtccInt.Annotation.modes.DRAW +
-        '"></callpointer></controlcall>')
-    });
+    describe('share pointer', function() {
 
+      beforeEach(function() {
+        annotation = new RtccInt.Annotation(rtcc, callObject, {
+          isShare: true
+        })
+      })
+
+      it('send erase control call to the driver', function() {
+        annotation.erase();
+        expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
+          '<controlcall id="' + callObject.callId + '"><sharepointer>clear</sharepointer></controlcall>')
+      });
+
+      it('send annotation mode to the driver', function() {
+        annotation.setMode(RtccInt.Annotation.modes.DRAW);
+        expect(rtcc.sendMessageToDriver).toHaveBeenCalledWith(
+          '<controlcall id="' + callObject.callId + '"><sharepointer mode="' + RtccInt.Annotation.modes.DRAW +
+          '"></sharepointer></controlcall>')
+      });
+
+    });
 
   });
 

@@ -51,6 +51,8 @@ try {
  * @param {(DOMobject|jQueryObject)} [settings.container=videobox] The container where the drawing will take place.
  *                                                               The default right click menu will be disabled.
  * @param {string} [settings.pointerSrc=a red pointer] The relative URL to the pointer image
+ * @param {boolean} [settings.isShare] If true, the annotations will take place in the shared video. The share must
+ *                                     have been started already. Mandatory for plugin and driver.
  * @param {object} [settings.circles]
  * @param {string} [settings.circles.premium="orange circle"] The absolute URL to the circle of the premium user.
  * @param {string} [settings.circles.external=green circle] The absolute URL to the circle of the external user.
@@ -71,12 +73,17 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //DEFAULT VALUES
   settings = settings || {};
+  settings.isShare = settings.isShare || false;
   //if the container is custom, we put a div inside that will be used as a wrapper
   //this is because ResizeSensor does not handle fixed positionning. Forking resizeSensor would also be a solution... 
-  if (settings.container)
+  if (settings.container) {
     settings.container = $(settings.container).append('<div></div>').find('> div').css('width', '100%').css('height', '100%')
-  else
-    settings.container = $('.rtcc-videobox .rtcc-active-video-container').first();
+  } else {
+    if (settings.isShare)
+      settings.container = $('.rtcc-ss').append('<div></div>').find('> div').css('width', '100%').css('height', '100%');
+    else
+      settings.container = $('.rtcc-videobox .rtcc-active-video-container').first();
+  }
 
   settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
   var defaultCircles = {
@@ -141,15 +148,15 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    */
   this.setMode = function(mode) {
     currentMode = mode;
-    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
+    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
+      var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
-        '<controlcall id="' + callObject.callId + '"><callpointer mode="' + mode + '"></callpointer></controlcall>')
-    else
+        '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
+    } else
       updateModeListener();
   }
 
   /**
-   *
    * @return {RtccInt.Annotation.modes} The current annotation mode.
    */
   this.getMode = function() {
@@ -215,11 +222,14 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase all drawings made on both sides
    */
   this.erase = function() {
-    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER)
+    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
+      var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
-        '<controlcall id="' + callObject.callId + '"><callpointer>clear</callpointer></controlcall>')
-    else
+        '<controlcall id="' + callObject.callId + '"><' + cmd + '>clear</' + cmd + '></controlcall>')
+    } else {
+      this.cleanPointer();
       this.ctxDraw.clearRect(0, 0, allCanvas.annotations.width(), allCanvas.annotations.height());
+    }
   }
 
   /**
