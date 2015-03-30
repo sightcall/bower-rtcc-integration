@@ -6,7 +6,11 @@ var RtccInt, RtccIntegration;
  */
 RtccInt = RtccIntegration = {};
 
-RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+try {
+  RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+} catch (e) {
+  console.log('Failed to get the script path')
+}
 
 /**
  * An instance of jQuery

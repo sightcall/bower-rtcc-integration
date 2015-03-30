@@ -6,7 +6,11 @@ var RtccInt, RtccIntegration;
  */
 RtccInt = RtccIntegration = {};
 
-RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+try {
+  RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
+} catch (e) {
+  console.log('Failed to get the script path')
+}
 
 /**
  * An instance of jQuery
@@ -67,13 +71,19 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //DEFAULT VALUES
   settings = settings || {};
-  settings.container = settings.container ? $(settings.container) : $('.rtcc-videobox .rtcc-active-video-container').first();
+  //if the container is custom, we put a div inside that will be used as a wrapper
+  //this is because ResizeSensor does not handle fixed positionning. Forking resizeSensor would also be a solution... 
+  if (settings.container)
+    settings.container = $(settings.container).append('<div></div>').find('> div').css('width', '100%').css('height', '100%')
+  else
+    settings.container = $('.rtcc-videobox .rtcc-active-video-container').first();
+
   settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
   var defaultCircles = {
     external: RtccInt.scriptpath + 'img/drop_green.png',
     premium: RtccInt.scriptpath + 'img/drop_orange.png'
   }
-  settings.circles = settings.circle || defaultCircles;
+  settings.circles = settings.circles || defaultCircles;
   settings.circles.premium = settings.circles.premium || defaultCircles.premium;
   settings.circles.external = settings.circles.external || defaultCircles.external;
   var defaultColors = {
