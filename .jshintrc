@@ -30,6 +30,7 @@
     "expect": false,
     "jasmine": false,
     "Rtcc": false,
+    "console": false,
     "ResizeSensor": false
   }
 }
