@@ -401,7 +401,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function updateModeListener() {
     removeModeListeners();
-    if (modeListeners[currentMode].length)
+    if (modeListeners[currentMode] && modeListeners[currentMode].length)
       $.each(modeListeners[currentMode], function(k, modeListener) {
         modeListener.target.on(modeListener.event, modeListener.listener);
       })
@@ -492,8 +492,10 @@ RtccInt.Annotation.modes = {
   POINTER: "pointer",
   /** A right button mouse hold will draw at the current mouse position **/
   DRAW: "draw",
-  /**  A right click will draw a circle around the point selected **/
-  DROP: "drop"
+  /** A right click will draw a circle around the point selected **/
+  DROP: "drop",
+  /** No action will take place */
+  NONE: 'none'
 };
 ;RtccInt.Box = function(content) {
   'use strict'

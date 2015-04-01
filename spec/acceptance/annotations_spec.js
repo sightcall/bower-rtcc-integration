@@ -66,6 +66,15 @@ describe('annotations module', function() {
     });
   }
 
+  describe('none', function() {
+    it('should not show pointer', function() {
+      annotation.setMode(RtccInt.Annotation.modes.POINTER);
+      annotation.setMode(RtccInt.Annotation.modes.NONE);
+      videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5));
+      expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();
+    });
+  });
+
 
   describe('pointer', function() {
     describe('draw pointer', function() {
@@ -105,8 +114,8 @@ describe('annotations module', function() {
       beforeEach(function() {
         annotation.setMode(RtccInt.Annotation.modes.POINTER);
       });
-      it('with offset', function() {
 
+      it('with offset', function() {
         videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5));
         expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
         expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith('RTCCPTRFFFFFFFF');
