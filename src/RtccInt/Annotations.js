@@ -235,6 +235,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //this also erase all the canvas content...
   function updateCanvasSize() {
     $.each(allCanvas, function(k, canvas) {
+      canvas.refresh()
       canvas[0].width = settings.container.width()
       canvas[0].height = settings.container.height()
     })
@@ -413,6 +414,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       throw new Error('Missing css-element-queries dependency. You can find it in the bower_components folder.')
 
     new ResizeSensor(settings.container, updateCanvasSize);
+    $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
 
 

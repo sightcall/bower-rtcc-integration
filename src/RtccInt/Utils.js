@@ -10,3 +10,9 @@ RtccInt.Utils = {
       .replace(/>/g, '&gt;');
   }
 };
+
+
+//jquery plugin to refresh a selector
+$.fn.refresh = function() {
+    return $(this.selector);
+};
