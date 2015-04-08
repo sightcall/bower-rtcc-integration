@@ -71,7 +71,7 @@ describe('annotations module', function() {
       annotation.setMode(RtccInt.Annotation.modes.POINTER);
       annotation.setMode(RtccInt.Annotation.modes.NONE);
       videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5));
-      expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();
+      expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith('RTCCPTR7FFF7FFF');
     });
   });
 
@@ -86,11 +86,13 @@ describe('annotations module', function() {
         }
       });
 
-      it('can draw after resize', function(done) {
+      it('after resize', function(done) {
         annotation.pointer.onload = function() {
           videoboxActive.width(videobox.width() * 2)
           videoboxActive.height(videobox.height() / 2)
-            //we have to wait for the resize event to be managed
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCERASE')
+
+          //we have to wait for the resize event to be managed
           setTimeout(function() {
             handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
             expect(hasPointerDrawn(50, 50)).toBe(true)
@@ -134,7 +136,7 @@ describe('annotations module', function() {
       it('send correct message when mouse out of videobox if needed', function() {
         //no pointer yet
         $(document).trigger(mouseMoveEvent(199, 150));
-        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled();
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith('RTCCPTRFFFFFFFF');
 
         //outside videobox with pointer
         videoboxActive.trigger(mouseMoveEvent(225, 125));
@@ -143,7 +145,7 @@ describe('annotations module', function() {
 
         //outside again
         $(document).trigger(mouseMoveEvent(199, 150));
-        expect(rtcc.sendInbandMessage.calls.all().length).toBe(2);
+        expect(rtcc.sendInbandMessage.calls.all().length).toBe(3);
       })
     });
 
@@ -288,7 +290,7 @@ describe('annotations module', function() {
       it('does not draw without right click', function() {
         videoboxActive.trigger(mouseMoveEvent(200, 100))
         videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
-        expect(rtcc.sendInbandMessage).not.toHaveBeenCalled()
+        expect(rtcc.sendInbandMessage).not.toHaveBeenCalledWith('RTCCDRAWFFFEFFFE')
       });
 
       it('draw line', function() {

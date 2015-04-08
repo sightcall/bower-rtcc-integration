@@ -13,7 +13,7 @@ module.exports = function(grunt) {
 
     config: grunt.file.readJSON('config.json'),
     watch: {
-      files: ['<%= jshint.files %>', 'assets/**/*'],
+      files: jsFiles.concat(['assets/**/*']),
       tasks: ['build', 'sftp']
     },
 
@@ -61,7 +61,7 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      files: ['src/**/*.js'],
+      files: ['src/**/*.js', '!src/RtccInt/Utils.js'],
       options: {
         jshintrc: '.jshintrc'
       }

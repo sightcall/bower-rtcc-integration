@@ -222,6 +222,14 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase all drawings made on both sides
    */
   this.erase = function() {
+    this.clean();
+    rtccObject.sendInbandMessage('RTCCERASE')
+  }
+
+  /**
+   * Erase local drawings
+   */
+  this.clean = function() {
     if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
@@ -276,10 +284,12 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //this also erase all the canvas content...
   function updateCanvasSize() {
     $.each(allCanvas, function(k, canvas) {
+      canvas.refresh()
       canvas[0].width = settings.container.width()
       canvas[0].height = settings.container.height()
     })
     updateContexts();
+    that.erase();
   }
 
   //Functions to ease maniputations of the hexa strings from the driver
@@ -430,7 +440,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
         var coords = coordinatesFromHexStr(hexStr)
         that.dropCircle(coords.x, coords.y, that.drawing.remote.circle)
       },
-      RTCCERASE: that.erase.bind(that),
+      RTCCERASE: that.clean.bind(that),
       RTCCDRAW: function(hexStr) {
         if (isOutOfBox(hexStr)) {
           previousDrawCoordinatesReceived = false;
@@ -454,6 +464,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       throw new Error('Missing css-element-queries dependency. You can find it in the bower_components folder.')
 
     new ResizeSensor(settings.container, updateCanvasSize);
+    $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
 
 
@@ -818,7 +829,6 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
 ;RtccInt.Utils = {
   //exists in underscore, include it if we need another function
   htmlEscape: function(str) {
-    'use strict'
     return String(str)
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
@@ -826,4 +836,10 @@ RtccInt.ConnectionStatus = function(rtccObject, htmlContainer, settings) {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+};
+
+
+//jquery plugin to refresh a selector
+$.fn.refresh = function() {
+  return $(this.selector);
 };

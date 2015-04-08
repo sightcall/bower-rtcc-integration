@@ -11,6 +11,7 @@ describe('draw module', function() {
     )
     rtcc = {
       on: jasmine.createSpy('on'),
+      sendInbandMessage: jasmine.createSpy('sendInbandMessage'),
       getConnectionMode: function() {
         return Rtcc.connectionModes.PLUGIN
       },

@@ -1,7 +1,6 @@
 RtccInt.Utils = {
   //exists in underscore, include it if we need another function
   htmlEscape: function(str) {
-    'use strict'
     return String(str)
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
@@ -14,5 +13,5 @@ RtccInt.Utils = {
 
 //jquery plugin to refresh a selector
 $.fn.refresh = function() {
-    return $(this.selector);
+  return $(this.selector);
 };

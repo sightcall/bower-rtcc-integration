@@ -181,6 +181,14 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase all drawings made on both sides
    */
   this.erase = function() {
+    this.clean();
+    rtccObject.sendInbandMessage('RTCCERASE')
+  }
+
+  /**
+   * Erase local drawings
+   */
+  this.clean = function() {
     if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
@@ -240,6 +248,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       canvas[0].height = settings.container.height()
     })
     updateContexts();
+    that.erase();
   }
 
   //Functions to ease maniputations of the hexa strings from the driver
@@ -390,7 +399,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
         var coords = coordinatesFromHexStr(hexStr)
         that.dropCircle(coords.x, coords.y, that.drawing.remote.circle)
       },
-      RTCCERASE: that.erase.bind(that),
+      RTCCERASE: that.clean.bind(that),
       RTCCDRAW: function(hexStr) {
         if (isOutOfBox(hexStr)) {
           previousDrawCoordinatesReceived = false;
