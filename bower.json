@@ -36,6 +36,6 @@
   ],
   "dependencies": {
     "jquery": ">=2.1",
-    "css-element-queries": "~0.0.2"
+    "javascript-detect-element-resize": "~0.5.3"
   }
 }

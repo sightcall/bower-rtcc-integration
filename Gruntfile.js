@@ -4,7 +4,7 @@ module.exports = function(grunt) {
   var jsFiles = ['Gruntfile.js', 'src/**/*.js', 'spec/**/*.js']
   var testDeps = [
     'bower_components/jquery/dist/jquery.js',
-    'bower_components/css-element-queries/src/ResizeSensor.js',
+    'bower_components/javascript-detect-element-resize/jquery.resize.js',
     'spec/support/*.js'
   ]
 

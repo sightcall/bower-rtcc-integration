@@ -24,8 +24,8 @@ The result is in the `doc` folder
 
 With this module, you can draw on the video or another element.
 
-The `Annotation` module depends upon `css-element-queries` which has been downloaded in a folder in `bower_components`.
-If you want to use it, include the library `bower_components/css-element-queries/src/ResizeSensor.js` in your project.
+The `Annotation` module depends upon the jQuery plugin `javascript-detect-element-resize`, which has been downloaded in a folder in `bower_components`.
+If you want to use it, include the library `bower_components/javascript-detect-element-resize/jquery.resize.js` in your project.
 
 A basic example that enables annotations on the video box:
 ```javascript

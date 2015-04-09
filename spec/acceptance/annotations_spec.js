@@ -88,12 +88,14 @@ describe('annotations module', function() {
 
       it('after resize', function(done) {
         annotation.pointer.onload = function() {
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCERASE')
+          rtcc.sendInbandMessage.calls.reset();
           videoboxActive.width(videobox.width() * 2)
           videoboxActive.height(videobox.height() / 2)
-          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCERASE')
 
           //we have to wait for the resize event to be managed
           setTimeout(function() {
+            expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCERASE')
             handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
             expect(hasPointerDrawn(50, 50)).toBe(true)
             done();

@@ -419,10 +419,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
 
   function startResizeSensor() {
-    if (typeof ResizeSensor !== 'function')
-      throw new Error('Missing css-element-queries dependency. You can find it in the bower_components folder.')
+    if (!$.fn.removeResize)
+      throw new Error('Missing jQuery resize plugin. You can find it in the bower_components folder.')
 
-    new ResizeSensor(settings.container, updateCanvasSize);
+    settings.container.resize(updateCanvasSize);
     $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
 
