@@ -51,3 +51,11 @@ TODO
 # Contribute
 
 See [here](contribute.md) how to improve this project.
+
+# Version history
+
+* 2.3.0: Fix fullscreen issue with FF, use a jQuery plugin instead of a standalone library to detect the resize
+* 2.2.0: Mode can be reset to 'none'
+* 2.1.0: Screenshare support
+* 2.0.0: Module Draw changes name to Annotation and other non-retrocompatible changes with constants
+* 1.0.0: First version
