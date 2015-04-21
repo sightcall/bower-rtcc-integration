@@ -3,6 +3,7 @@ describe('annotations module', function() {
   var annotation;
   var rtcc;
   var handleInbandMessage;
+  var framesizeCallback;
   var videobox
   var videoboxActive
 
@@ -29,6 +30,7 @@ describe('annotations module', function() {
 
     annotation = new RtccInt.Annotation(rtcc, callObject)
     handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
+    framesizeCallback = callObject.on.calls.mostRecent().args[1]
   });
 
   afterEach(function() {
@@ -37,8 +39,8 @@ describe('annotations module', function() {
   })
 
   function hasPointerDrawn(xPercent, yPercent) {
-    var x = Math.round(xPercent * videoboxActive.width() / 100)
-    var y = Math.round(yPercent * videoboxActive.height() / 100)
+    var x = Math.round(xPercent * $('.rtccint-pointer').width() / 100)
+    var y = Math.round(yPercent * $('.rtccint-pointer').height() / 100)
     var data = annotation.ctxPtr.getImageData(x, y, 1, 1).data;
     return isColorCorrectish(data, [219, 219, 219, 201])
   }
@@ -362,6 +364,43 @@ describe('annotations module', function() {
 
     });
 
+  });
+
+
+  describe('video frame size', function() {
+    it('with 16/9 ratio and same zoom', function() {
+      framesizeCallback({
+        width: 500,
+        height: 300
+      })
+      expect($('.rtccint-annotations').width()).toBe(500)
+      expect($('.rtccint-annotations').height()).toBe(300)
+    });
+
+    it('with other ratio, zoomed', function() {
+      framesizeCallback({
+        width: 50,
+        height: 100
+      })
+      expect($('.rtccint-annotations').width()).toBe(50 * 300 / 100)
+      expect($('.rtccint-annotations').height()).toBe(300)
+    });
+
+    it('with other ratio zoomed and resize container', function(done) {
+      framesizeCallback({
+        width: 50,
+        height: 100
+      })
+      videoboxActive.width(videobox.width() * 2)
+      videoboxActive.height(videobox.height() / 2)
+      setTimeout(function() {
+        expect($('.rtccint-annotations').width()).toBe(75)
+        expect($('.rtccint-annotations').height()).toBe(150)
+          //centered ?
+        expect($('.rtccint-annotations').css('left')).toBe(Math.round((videobox.width() * 2 - 75) / 2) + 'px')
+        done()
+      }, 100)
+    });
   });
 
 

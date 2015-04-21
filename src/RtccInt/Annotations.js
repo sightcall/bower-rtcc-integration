@@ -33,16 +33,17 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //DEFAULT VALUES
   settings = settings || {};
   settings.isShare = settings.isShare || false;
+
+  var container = settings.container;
+  if (!container) {
+    if (settings.isShare)
+      container = $('.rtcc-ss');
+    else
+      container = $('.rtcc-videobox .rtcc-active-video-container').first();
+  }
   //if the container is custom, we put a div inside that will be used as a wrapper
   //this is because ResizeSensor does not handle fixed positionning. Forking resizeSensor would also be a solution... 
-  if (settings.container) {
-    settings.container = $(settings.container).append('<div></div>').find('> div').css('width', '100%').css('height', '100%')
-  } else {
-    if (settings.isShare)
-      settings.container = $('.rtcc-ss').append('<div></div>').find('> div').css('width', '100%').css('height', '100%');
-    else
-      settings.container = $('.rtcc-videobox .rtcc-active-video-container').first();
-  }
+  container.append('<div class="rtccint-resize-container" style="width: 100%; height: 100%;"></div>')
 
   settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
   var defaultCircles = {
@@ -67,6 +68,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     annotations: $('<canvas class="rtccint-annotations" />')
   }
   var currentMode;
+  var framesize = {
+    height: container.height(),
+    width: container.width(),
+  };
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
   var shouldSendPointerOff = false;
@@ -146,7 +151,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * @param  {imageObject} circle The circle to be drawn
    */
   this.dropCircle = function(x, y, circle) {
-    var ratio = settings.container.width() * this.circleRatioToContainer / circle.width
+    var ratio = container.width() * this.circleRatioToContainer / circle.width
     var drawnCircleWidth = Math.round(circle.width * ratio)
     var drawnCircleHeight = Math.round(circle.height * ratio)
     this.ctxDraw.drawImage(
@@ -240,12 +245,37 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     that.ctxDraw = allCanvas.annotations[0].getContext('2d');
   }
 
-  //this also erase all the canvas content...
+
+  function framesizeCallback(newFramesize) {
+    framesize = newFramesize
+    updateCanvasSize()
+  }
+
   function updateCanvasSize() {
+    var width, height, widthRatio, heightRatio, ratio;
+    //with a custom container, we don't care about the framesize
+    if (!settings.container) {
+      widthRatio = container.width() / framesize.width
+      heightRatio = container.height() / framesize.height
+      ratio = Math.min(heightRatio, widthRatio)
+      width = framesize.width * ratio
+      height = framesize.height * ratio
+    }
+
     $.each(allCanvas, function(k, canvas) {
-      canvas.refresh()
-      canvas[0].width = settings.container.width()
-      canvas[0].height = settings.container.height()
+      canvas.refresh();
+      //this also erase all the canvas content...
+      canvas[0].width = width || container.width()
+      canvas[0].height = height || container.height()
+    });
+    //center
+    $.each(allCanvas, function(k, canvas) {
+      if (widthRatio) {
+        if (widthRatio > heightRatio)
+          canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
+        else
+          canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
+      }
     })
     updateContexts();
     that.erase();
@@ -269,10 +299,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //https://github.com/weemo/Mobile/blob/feature-scheme/scheme.md
   //works for any videobox position
   function mouseCoordToHex(x, y) {
-    var xOffset = x - settings.container.offset().left;
-    var yOffset = y - settings.container.offset().top;
-    var hexX = that._percentToHex(xOffset / settings.container.width() * 100)
-    var hexY = that._percentToHex(yOffset / settings.container.height() * 100)
+    var xOffset = x - allCanvas.pointer.offset().left;
+    var yOffset = y - allCanvas.pointer.offset().top;
+    var hexX = that._percentToHex(xOffset / allCanvas.pointer.width() * 100)
+    var hexY = that._percentToHex(yOffset / allCanvas.pointer.height() * 100)
     return hexX === 'FFFF' || hexY === 'FFFF' ? 'FFFFFFFF' : hexX + hexY;
   }
 
@@ -317,7 +347,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }]
   modeListeners[RtccInt.Annotation.modes.DROP] = [{
     event: 'mousedown',
-    target: settings.container,
+    target: container,
     listener: function(event) {
       if (event.which === 3) {
         var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
@@ -329,7 +359,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }]
   modeListeners[RtccInt.Annotation.modes.DRAW] = [{
     event: 'mousedown',
-    target: settings.container,
+    target: container,
     listener: function(event) {
       if (event.which === 3) {
         rightMouseDown = true
@@ -341,7 +371,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     }
   }, {
     event: 'mouseup',
-    target: settings.container,
+    target: container,
     listener: function(event) {
       if (event.which === 3) {
         rightMouseDown = false
@@ -422,20 +452,20 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     if (!$.fn.removeResize)
       throw new Error('Missing jQuery resize plugin. You can find it in the bower_components folder.')
 
-    settings.container.resize(updateCanvasSize);
+    container.resize(updateCanvasSize);
     $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
 
 
   function init() {
-    if (rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER && !settings.container)
+    if (rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER && !container)
       throw 'RtccInt.Draw needs a container to put the drawing.';
 
     //context menu disable right click
-    settings.container.attr('oncontextmenu', 'return false')
+    container.attr('oncontextmenu', 'return false')
 
     $.each(allCanvas, function(k, v) {
-      settings.container.append(v);
+      container.append(v);
     })
 
     rtccObject.on('message.inband', handleInbandMessage);
@@ -444,6 +474,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
         v.remove();
       })
     });
+
+    callObject.on('video.framesize', framesizeCallback)
+
     startResizeSensor();
     updateCanvasSize();
   }

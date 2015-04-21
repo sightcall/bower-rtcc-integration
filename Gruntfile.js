@@ -90,6 +90,7 @@ module.exports = function(grunt) {
           keepRunner: true,
           outfile: 'spec/unit/unit.html',
           specs: ["spec/unit/*_spec.js"],
+          styles: 'dist/css/main.css',
           vendor: testDeps
         }
       },
@@ -99,6 +100,7 @@ module.exports = function(grunt) {
           keepRunner: true,
           outfile: 'spec/acceptance/acceptance.html',
           specs: ["spec/acceptance/*_spec.js"],
+          styles: 'dist/css/main.css',
           vendor: testDeps
         }
       }
@@ -165,7 +167,7 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   grunt.registerTask('default', ['watch']);
-  grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default', 'jasmine']);
+  grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default', 'jasmine', 'jsdoc']);
   grunt.registerTask('precommit', ['jshint', 'jsbeautifier:git-pre-commit', 'jasmine']);
   grunt.registerTask('build', ['less:development', 'concat', 'copy']);
 
