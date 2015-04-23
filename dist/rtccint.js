@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.0';
+RtccInt.version = '@@version';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -296,7 +296,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     updateCanvasSize()
   }
 
-  function updateCanvasSize() {
+  function updateCanvasSize(event) {
+    event = event || {}
     var width, height, widthRatio, heightRatio, ratio;
     //with a custom container, we don't care about the framesize
     if (!settings.container) {
@@ -323,7 +324,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       }
     })
     updateContexts();
-    that.erase();
+    if (!event.doNotErase) that.erase();
   }
 
   //Functions to ease maniputations of the hexa strings from the driver
@@ -530,7 +531,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       callObject.on('video.framesize', framesizeCallback)
     }
 
-    updateCanvasSize();
+    updateCanvasSize({
+      doNotErase: true
+    });
   }
 
   init();

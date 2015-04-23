@@ -90,7 +90,6 @@ describe('annotations module', function() {
 
       it('after resize', function(done) {
         annotation.pointer.onload = function() {
-          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCERASE')
           rtcc.sendInbandMessage.calls.reset();
           videoboxActive.width(videobox.width() * 2)
           videoboxActive.height(videobox.height() / 2)
@@ -149,7 +148,7 @@ describe('annotations module', function() {
 
         //outside again
         $(document).trigger(mouseMoveEvent(199, 150));
-        expect(rtcc.sendInbandMessage.calls.all().length).toBe(3);
+        expect(rtcc.sendInbandMessage.calls.all().length).toBe(2);
       })
     });
 

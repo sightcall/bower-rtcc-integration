@@ -2,7 +2,7 @@
 
 ## Compatibility
 
-The **RTCC API version 6.1.7** or higher is required.
+The **RTCC API version 6.1.35** or higher is required.
 
 ## Install with bower
 

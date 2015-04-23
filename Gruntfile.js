@@ -12,6 +12,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
 
     config: grunt.file.readJSON('config.json'),
+    bower: grunt.file.readJSON('bower.json'),
     watch: {
       files: jsFiles.concat(['assets/**/*']),
       tasks: ['build', 'sftp']
@@ -147,10 +148,10 @@ module.exports = function(grunt) {
 
     bump: {
       options: {
-        files: ['bower.json', 'src/rtccint.js'],
-        updateConfigs: [],
+        files: ['bower.json'],
+        updateConfigs: ['config'],
         commit: true,
-        commitFiles: ['bower.json', 'src/rtccint.js'], // '-a' for all files
+        commitFiles: ['-a'], // '-a' for all files
         createTag: true,
         tagName: '%VERSION%',
         tagMessage: 'Version %VERSION%',
@@ -159,6 +160,27 @@ module.exports = function(grunt) {
         gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d' // options to use with '$ git describe'
       }
     },
+
+    replace: {
+      version: {
+        options: {
+          patterns: [{
+            match: 'version',
+            replacement: '<%= bower.version %>'
+            }]
+        },
+        files: [
+          {
+            expand: true,
+            flatten: true,
+            src: ['dist/rtccint.js'],
+            dest: 'dist/'
+          }
+        ]
+      }
+    },
+
+
 
 
   });
@@ -170,5 +192,9 @@ module.exports = function(grunt) {
   grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default', 'jasmine', 'jsdoc']);
   grunt.registerTask('precommit', ['jshint', 'jsbeautifier:git-pre-commit', 'jasmine']);
   grunt.registerTask('build', ['less:development', 'concat', 'copy']);
+
+  grunt.registerTask('release', 'A task to tag, commit and push', function(level) {
+    grunt.task.run(['bump-only:' + level, 'replace:version', 'bump-commit']);
+  })
 
 };
