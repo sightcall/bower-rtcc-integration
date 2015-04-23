@@ -9,6 +9,7 @@ var Rtcc = {
 var callObject = {
   callId: 'call_id',
   callPointer: jasmine.createSpy('callPointer'),
+  enableFrameSizeDetection: jasmine.createSpy('enableFrameSizeDetection'),
   on: jasmine.createSpy('on'),
 }
 

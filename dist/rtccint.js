@@ -82,9 +82,6 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     else
       container = $('.rtcc-videobox .rtcc-active-video-container').first();
   }
-  //if the container is custom, we put a div inside that will be used as a wrapper
-  //this is because ResizeSensor does not handle fixed positionning. Forking resizeSensor would also be a solution... 
-  container.append('<div class="rtccint-resize-container" style="width: 100%; height: 100%;"></div>')
 
   settings.pointerSrc = settings.pointerSrc || RtccInt.scriptpath + 'img/pointer.png';
   var defaultCircles = {
@@ -121,6 +118,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   var previousDrawCoordinatesSent = false;
   var rightMouseDown = false;
   var isExternal = rtccObject.getRtccUserType() === 'external';
+  var videoResizeTimeoutId;
 
   //ATTRIBUTES
   this.ctxPtr = false;
@@ -255,6 +253,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    */
   this.destroy = function() {
     removeModeListeners();
+    clearTimeout(videoResizeTimeoutId)
     $.each(allCanvas, function(k, v) {
       v.remove();
     })
@@ -489,14 +488,13 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     })
   }
 
-  function startResizeSensor() {
+  function startContainerResizeDetection() {
     if (!$.fn.removeResize)
       throw new Error('Missing jQuery resize plugin. You can find it in the bower_components folder.')
 
     container.resize(updateCanvasSize);
     $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
-
 
   function init() {
     if (rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER && !container)
@@ -516,9 +514,15 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       })
     });
 
-    callObject.on('video.framesize', framesizeCallback)
+    //container size change ?
+    startContainerResizeDetection();
 
-    startResizeSensor();
+    //video size change ? (can happen when a mobile rotates)
+    if (!settings.container && !settings.isShare && rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER) {
+      callObject.enableFrameSizeDetection();
+      callObject.on('video.framesize', framesizeCallback)
+    }
+
     updateCanvasSize();
   }
 
