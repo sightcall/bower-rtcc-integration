@@ -6,6 +6,11 @@ var RtccInt, RtccIntegration;
  */
 RtccInt = RtccIntegration = {};
 
+/**
+ * @property {String} version - The version of the library
+ */
+RtccInt.version = '2.3.0';
+
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
 } catch (e) {
@@ -519,7 +524,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
     //video size change ? (can happen when a mobile rotates)
     if (!settings.container && !settings.isShare && rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER) {
-      callObject.enableFrameSizeDetection();
+      if (callObject.enableFrameSizeDetection) {
+        callObject.enableFrameSizeDetection();
+      }
       callObject.on('video.framesize', framesizeCallback)
     }
 

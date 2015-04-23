@@ -478,7 +478,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
     //video size change ? (can happen when a mobile rotates)
     if (!settings.container && !settings.isShare && rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER) {
-      callObject.enableFrameSizeDetection();
+      if (callObject.enableFrameSizeDetection) {
+        callObject.enableFrameSizeDetection();
+      }
       callObject.on('video.framesize', framesizeCallback)
     }
 

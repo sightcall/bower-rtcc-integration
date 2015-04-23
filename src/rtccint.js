@@ -6,6 +6,11 @@ var RtccInt, RtccIntegration;
  */
 RtccInt = RtccIntegration = {};
 
+/**
+ * @property {String} version - The version of the library
+ */
+RtccInt.version = '2.3.0';
+
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
 } catch (e) {

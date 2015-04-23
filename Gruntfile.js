@@ -147,10 +147,10 @@ module.exports = function(grunt) {
 
     bump: {
       options: {
-        files: ['bower.json'],
+        files: ['bower.json', 'src/rtccint.js'],
         updateConfigs: [],
         commit: true,
-        commitFiles: ['bower.json'], // '-a' for all files
+        commitFiles: ['bower.json', 'src/rtccint.js'], // '-a' for all files
         createTag: true,
         tagName: '%VERSION%',
         tagMessage: 'Version %VERSION%',
