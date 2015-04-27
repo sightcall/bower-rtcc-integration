@@ -60,6 +60,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //LOCAL
   var that = this;
+  var rtccPrefix = settings.isShare ? 'RTCCS' : 'RTCC';
   var allCanvas = {
     pointer: $('<canvas class="rtccint-pointer" />'),
     annotations: $('<canvas class="rtccint-annotations" />')
@@ -310,7 +311,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function pointerMouseListener(event) {
     var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-    var message = 'RTCCPTR' + hexCoords;
+    var message = rtccPrefix + 'PTR' + hexCoords;
     if (isOutOfBox(hexCoords)) {
       if (shouldSendPointerOff) {
         shouldSendPointerOff = false
@@ -329,13 +330,13 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function sendDrawCoords(event) {
     var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-    rtccObject.sendInbandMessage('RTCCDRAW' + hexCoords);
+    rtccObject.sendInbandMessage(rtccPrefix + 'DRAW' + hexCoords);
     return hexCoords;
   }
 
   function stopDraw() {
     previousDrawCoordinatesSent = false
-    rtccObject.sendInbandMessage('RTCCDRAWFFFFFFFF');
+    rtccObject.sendInbandMessage(rtccPrefix + 'DRAWFFFFFFFF');
   }
 
   //event listeners
@@ -351,7 +352,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     listener: function(event) {
       if (event.which === 3) {
         var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-        rtccObject.sendInbandMessage('RTCCDROP' + hexCoords);
+        rtccObject.sendInbandMessage(rtccPrefix + 'DROP' + hexCoords);
         var coords = coordinatesFromHexStr(hexCoords)
         that.dropCircle(coords.x, coords.y, that.drawing.local.circle)
       }
@@ -416,32 +417,41 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
 
   function handleInbandMessage(message) {
-    $.each({
-      RTCCPTR: function(hexStr) {
-        if (!isOutOfBox(hexStr)) {
-          var coords = coordinatesFromHexStr(hexStr)
-          that.setPointer(coords.x, coords.y)
-        } else {
-          that.cleanPointer();
-        }
-      },
-      RTCCDROP: function(hexStr) {
+    function handlePtr(hexStr) {
+      if (!isOutOfBox(hexStr)) {
         var coords = coordinatesFromHexStr(hexStr)
-        that.dropCircle(coords.x, coords.y, that.drawing.remote.circle)
-      },
-      RTCCERASE: that.clean.bind(that),
-      RTCCDRAW: function(hexStr) {
-        if (isOutOfBox(hexStr)) {
-          previousDrawCoordinatesReceived = false;
-          return
-        }
-        var coords = coordinatesFromHexStr(hexStr)
-        if (previousDrawCoordinatesReceived) {
-          that.drawLine(previousDrawCoordinatesReceived, coords, that.drawing.remote.color)
-        }
-        previousDrawCoordinatesReceived = coords
+        that.setPointer(coords.x, coords.y)
+      } else {
+        that.cleanPointer();
       }
+    }
+
+    function handleDrop(hexStr) {
+      var coords = coordinatesFromHexStr(hexStr)
+      that.dropCircle(coords.x, coords.y, that.drawing.remote.circle)
+    }
+
+    function handleDraw(hexStr) {
+      if (isOutOfBox(hexStr)) {
+        previousDrawCoordinatesReceived = false;
+        return
+      }
+      var coords = coordinatesFromHexStr(hexStr)
+      if (previousDrawCoordinatesReceived) {
+        that.drawLine(previousDrawCoordinatesReceived, coords, that.drawing.remote.color)
+      }
+      previousDrawCoordinatesReceived = coords
+    }
+
+    $.each({
+      RTCCPTR: handlePtr,
+      RTCCDROP: handleDrop,
+      RTCCERASE: that.clean.bind(that),
+      RTCCDRAW: handleDraw
     }, function(key, listener) {
+      if (settings.isShare && $.inArray(message.substring(0, 8), ['RTCCSDRO', 'RTCCSDRA', 'RTCCSPTR'])) {
+        message = message.replace('RTCCS', 'RTCC')
+      }
       if (message.search(key) === 0) {
         listener(message.replace(key, ''))
       }

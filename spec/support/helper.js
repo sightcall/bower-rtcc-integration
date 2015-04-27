@@ -25,3 +25,34 @@ var isColorCorrectish = function(imageData, expected) {
     correctColor(imageData[2], expected[2]) &&
     correctColor(imageData[3], expected[3])
 }
+
+function hasLineDrawn(ctx, xPercent, yPercent, expectedData) {
+  var x = Math.round(xPercent * $('.rtccint-annotations').width() / 100)
+  var y = Math.round(yPercent * $('.rtccint-annotations').height() / 100)
+  var data = ctx.getImageData(x, y, 1, 1).data;
+  return isColorCorrectish(data, expectedData)
+}
+
+//mouse events
+function mouseMoveEvent(x, y) {
+  return $.Event('mousemove', {
+    pageX: x,
+    pageY: y
+  });
+}
+
+function rightClickEvent(x, y) {
+  return $.Event('mousedown', {
+    pageX: x,
+    pageY: y,
+    which: 3
+  });
+}
+
+function releaseRightClickEvent(x, y) {
+  return $.Event("mouseup", {
+    which: 3,
+    pageX: x,
+    pageY: y
+  });
+}

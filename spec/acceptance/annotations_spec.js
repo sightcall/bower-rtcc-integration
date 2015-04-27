@@ -45,29 +45,6 @@ describe('annotations module', function() {
     return isColorCorrectish(data, [219, 219, 219, 201])
   }
 
-  function mouseMoveEvent(x, y) {
-    return $.Event('mousemove', {
-      pageX: x,
-      pageY: y
-    });
-  }
-
-  function rightClickEvent(x, y) {
-    return $.Event('mousedown', {
-      pageX: x,
-      pageY: y,
-      which: 3
-    });
-  }
-
-  function releaseRightClickEvent(x, y) {
-    return $.Event("mouseup", {
-      which: 3,
-      pageX: x,
-      pageY: y
-    });
-  }
-
   describe('none', function() {
     it('should not show pointer', function() {
       annotation.setMode(RtccInt.Annotation.modes.POINTER);
@@ -230,11 +207,9 @@ describe('annotations module', function() {
 
 
   describe('draw', function() {
+
     function toHaveLine(xPercent, yPercent, expectedData) {
-      var x = Math.round(xPercent * videoboxActive.width() / 100)
-      var y = Math.round(yPercent * videoboxActive.height() / 100)
-      var data = annotation.ctxDraw.getImageData(x, y, 1, 1).data;
-      return isColorCorrectish(data, expectedData)
+      return hasLineDrawn(annotation.ctxDraw, xPercent, yPercent, expectedData)
     }
 
     describe('receive', function() {
@@ -310,7 +285,7 @@ describe('annotations module', function() {
   });
 
 
-  describe('driver mode', function() {
+  describe('driver choose mode', function() {
     beforeEach(function() {
       rtcc.getConnectionMode = function() {
         return 'driver'

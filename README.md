@@ -48,6 +48,7 @@ See [here](contribute.md) how to improve this project.
 
 # Version history
 
+* 2.3.5: Fix annotations on non-16/9 videos
 * 2.3.0: Fix fullscreen issue with FF, use a jQuery plugin instead of a standalone library to detect the resize
 * 2.2.0: Mode can be reset to 'none'
 * 2.1.0: Screenshare support
