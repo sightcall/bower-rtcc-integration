@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.5';
+RtccInt.version = '@@version';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -339,7 +339,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
 
   function isOutOfBox(hexStr) {
-    return hexStr === 'FFFFFFFF';
+    return hexStr.toUpperCase() === 'FFFFFFFF';
   }
 
   //transform mouse coordinates in a string according to this spec:

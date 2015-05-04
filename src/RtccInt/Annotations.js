@@ -293,7 +293,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
 
   function isOutOfBox(hexStr) {
-    return hexStr === 'FFFFFFFF';
+    return hexStr.toUpperCase() === 'FFFFFFFF';
   }
 
   //transform mouse coordinates in a string according to this spec:
