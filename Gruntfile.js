@@ -149,7 +149,7 @@ module.exports = function(grunt) {
     bump: {
       options: {
         files: ['bower.json'],
-        updateConfigs: ['config'],
+        updateConfigs: ['config', 'bower'],
         commit: true,
         commitFiles: ['-a'], // '-a' for all files
         createTag: true,
