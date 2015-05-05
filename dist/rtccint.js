@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.7';
+RtccInt.version = '2.3.10';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';

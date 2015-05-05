@@ -166,7 +166,9 @@ module.exports = function(grunt) {
         options: {
           patterns: [{
             match: 'version',
-            replacement: '<%= bower.version %>'
+            replacement: function() {
+              return grunt.file.readJSON('bower.json').version
+            }
             }]
         },
         files: [
