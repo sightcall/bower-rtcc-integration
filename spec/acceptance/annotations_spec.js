@@ -375,6 +375,19 @@ describe('annotations module', function() {
         done()
       }, 100)
     });
+
+    it('successive resize', function() {
+      framesizeCallback({
+        width: 50,
+        height: 100
+      })
+      framesizeCallback({
+        width: 500,
+        height: 300
+      })
+      expect($('.rtccint-annotations').position().top).toBe(0)
+      expect($('.rtccint-annotations').position().left).toBe(0)
+    });
   });
 
 

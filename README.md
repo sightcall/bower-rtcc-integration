@@ -10,7 +10,7 @@ Install with: `bower install rtcc-integration --save`
 
 Include the following files to your project:
 
- * `bower_components/rtcc-integration/dist/RtccInt.js`
+ * `bower_components/rtcc-integration/dist/rtccint.js`
  * `bower_components/rtcc-integration/dist/css/main.css`
 
 You are now ready to go!

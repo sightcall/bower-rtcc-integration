@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.10';
+RtccInt.version = '2.3.11';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -318,10 +318,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     //center
     $.each(allCanvas, function(k, canvas) {
       if (widthRatio) {
-        if (widthRatio > heightRatio)
-          canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
-        else
-          canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
+        canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
+        canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
       }
     })
     updateContexts();

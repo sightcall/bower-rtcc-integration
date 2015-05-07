@@ -272,10 +272,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     //center
     $.each(allCanvas, function(k, canvas) {
       if (widthRatio) {
-        if (widthRatio > heightRatio)
-          canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
-        else
-          canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
+        canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
+        canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
       }
     })
     updateContexts();
