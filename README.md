@@ -53,6 +53,7 @@ See [here](contribute.md) how to improve this project.
 
 # Version history
 
+* 2.3.12: Fix for mobile: pointer position, drop circle size, number of position messages. Also fix right click drawing bug when going outside of the canvas.
 * 2.3.11: Fix annotations on non-16/9 videos
 * 2.3.0: Fix fullscreen issue with FF, use a jQuery plugin instead of a standalone library to detect the resize
 * 2.2.0: Mode can be reset to 'none'

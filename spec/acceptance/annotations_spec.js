@@ -42,7 +42,7 @@ describe('annotations module', function() {
     var x = Math.round(xPercent * $('.rtccint-pointer').width() / 100)
     var y = Math.round(yPercent * $('.rtccint-pointer').height() / 100)
     var data = annotation.ctxPtr.getImageData(x, y, 1, 1).data;
-    return isColorCorrectish(data, [219, 219, 219, 201])
+    return isColorCorrectish(data, [255, 255, 255, 200])
   }
 
   describe('none', function() {
@@ -254,15 +254,25 @@ describe('annotations module', function() {
         annotation.setMode(RtccInt.Annotation.modes.DRAW);
       });
 
-      it('send coordinates', function() {
+      it('send coordinates', function(done) {
         videoboxActive.trigger(rightClickEvent(200 + videoboxActive.width() * 0.5, 100 + videoboxActive.height() * 0.5));
-        videoboxActive.trigger(mouseMoveEvent(200, 100))
-        videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
-        videoboxActive.trigger(releaseRightClickEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
-        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW7FFF7FFF')
-        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW00000000')
-        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFEFFFE')
-        expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFFFFFF')
+
+        //each point message is delayed, otherwise it's not taken in account
+        setTimeout(function() {
+          videoboxActive.trigger(mouseMoveEvent(200, 100))
+          setTimeout(function() {
+            videoboxActive.trigger(mouseMoveEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
+            videoboxActive.trigger(releaseRightClickEvent(200 + videoboxActive.width() * 1, 100 + videoboxActive.height() * 1))
+          }, annotation.messageDelay + 1)
+        }, annotation.messageDelay + 1)
+
+        setTimeout(function() {
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW7FFF7FFF')
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAW00000000')
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFEFFFE')
+          expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCDRAWFFFFFFFF')
+          done()
+        }, annotation.messageDelay * 3 + 10)
       });
 
       it('does not draw without right click', function() {

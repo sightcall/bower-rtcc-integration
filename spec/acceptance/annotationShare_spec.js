@@ -39,17 +39,25 @@ describe('share messages', function() {
     expect(hasLineDrawn(annotation.ctxDraw, 75, 50, annotation.drawing.remote.color)).toBe(true)
   });
 
-  it('send draw coordinates', function() {
+  it('send draw coordinates', function(done) {
     annotation.setMode(RtccInt.Annotation.modes.DRAW);
     screenshareContainer.trigger(rightClickEvent(200 + screenshareContainer.width() * 0.5, 100 + screenshareContainer.height() *
       0.5));
-    screenshareContainer.trigger(mouseMoveEvent(200, 100))
-    screenshareContainer.trigger(mouseMoveEvent(200 + screenshareContainer.width() * 1, 100 + screenshareContainer.height() * 1))
-    screenshareContainer.trigger(releaseRightClickEvent(200 + screenshareContainer.width() * 1, 100 + screenshareContainer.height() *
-      1))
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAW7FFF7FFF')
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAW00000000')
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAWFFFEFFFE')
-    expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAWFFFFFFFF')
+    setTimeout(function() {
+      screenshareContainer.trigger(mouseMoveEvent(200, 100))
+      setTimeout(function() {
+        screenshareContainer.trigger(mouseMoveEvent(200 + screenshareContainer.width() * 1, 100 + screenshareContainer.height() * 1))
+        screenshareContainer.trigger(releaseRightClickEvent(200 + screenshareContainer.width() * 1, 100 + screenshareContainer.height() *
+          1))
+      }, annotation.messageDelay + 1)
+    }, annotation.messageDelay + 1)
+
+    setTimeout(function() {
+      expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAW7FFF7FFF')
+      expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAW00000000')
+      expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAWFFFEFFFE')
+      expect(rtcc.sendInbandMessage).toHaveBeenCalledWith('RTCCSDRAWFFFFFFFF')
+      done()
+    }, annotation.messageDelay * 3 + 10)
   });
 });

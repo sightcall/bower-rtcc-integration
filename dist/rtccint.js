@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.11';
+RtccInt.version = '2.3.12';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -118,8 +118,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   };
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
-  var shouldSendPointerOff = false;
-  var shouldSendPointer = true;
+  var shouldSendOff; //flag that indicates if we need to send an out of box position message
+  var timeLastMessage; //last message sending time, to avoid spamming mobile devices
+  setDefaultTimers();
   var previousDrawCoordinatesReceived = false;
   var previousDrawCoordinatesSent = false;
   var rightMouseDown = false;
@@ -129,7 +130,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //ATTRIBUTES
   this.ctxPtr = false;
   this.ctxDraw = false;
-  this.pointerDelay = 50; //in ms
+  this.messageDelay = 20; //in ms
 
   /**
    * @property {Number} [circleRatioToContainer=0.15] - Ratio of the circle size compared to the container size
@@ -157,6 +158,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    */
   this.setMode = function(mode) {
     currentMode = mode;
+    setDefaultTimers()
     if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
@@ -179,7 +181,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    */
   this.setPointer = function(x, y) {
     this.cleanPointer();
-    this.ctxPtr.drawImage(that.pointer, x - that.pointer.width / 2, y - that.pointer.height / 2)
+    //the pointy end of the mouse is in position (4, 3)
+    this.ctxPtr.drawImage(that.pointer, x - 4, y - 3)
   }
 
   /**
@@ -196,7 +199,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * @param  {imageObject} circle The circle to be drawn
    */
   this.dropCircle = function(x, y, circle) {
-    var ratio = container.width() * this.circleRatioToContainer / circle.width
+    var ratio = allCanvas.annotations.width() * this.circleRatioToContainer / circle.width
     var drawnCircleWidth = Math.round(circle.width * ratio)
     var drawnCircleHeight = Math.round(circle.height * ratio)
     this.ctxDraw.drawImage(
@@ -291,6 +294,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     that.ctxDraw = allCanvas.annotations[0].getContext('2d');
   }
 
+  function setDefaultTimers() {
+    timeLastMessage = 0;
+    shouldSendOff = false;
+  }
 
   function framesizeCallback(newFramesize) {
     framesize = newFramesize
@@ -351,30 +358,34 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     return hexX === 'FFFF' || hexY === 'FFFF' ? 'FFFFFFFF' : hexX + hexY;
   }
 
+  function sendPositionMessage(messageType, hexCoords) {
+    var message = rtccPrefix + messageType + hexCoords;
+    if (isOutOfBox(hexCoords)) {
+      if (shouldSendOff) {
+        shouldSendOff = false
+        rtccObject.sendInbandMessage(message);
+      }
+    } else {
+      var currentTime = (new Date()).getTime()
+        //wait a certain time between message in order not to spam mobile devices
+      if (timeLastMessage + that.messageDelay < currentTime) {
+        shouldSendOff = true;
+        rtccObject.sendInbandMessage(message);
+        timeLastMessage = currentTime
+      }
+    }
+  }
+
 
 
   function pointerMouseListener(event) {
     var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-    var message = rtccPrefix + 'PTR' + hexCoords;
-    if (isOutOfBox(hexCoords)) {
-      if (shouldSendPointerOff) {
-        shouldSendPointerOff = false
-        shouldSendPointer = true;
-        rtccObject.sendInbandMessage(message);
-      }
-    } else if (shouldSendPointer) {
-      shouldSendPointerOff = true;
-      rtccObject.sendInbandMessage(message);
-      shouldSendPointer = false;
-      setTimeout(function() {
-        shouldSendPointer = true;
-      }, that.pointerDelay);
-    }
+    sendPositionMessage('PTR', hexCoords)
   }
 
   function sendDrawCoords(event) {
     var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-    rtccObject.sendInbandMessage(rtccPrefix + 'DRAW' + hexCoords);
+    sendPositionMessage('DRAW', hexCoords)
     return hexCoords;
   }
 

@@ -48,7 +48,7 @@ describe('draw module', function() {
   it('receive inband message', function() {
     var handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
     handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
-    expect(ctxPtr.drawImage).toHaveBeenCalledWith(draw.pointer, 25, 25)
+    expect(ctxPtr.drawImage).toHaveBeenCalledWith(draw.pointer, 21, 22)
   });
 
   it('handle out of screen pointer', function() {
