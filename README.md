@@ -41,6 +41,11 @@ This module is compatible with all connexion client types offered in RTCC: webrt
 
 See the doc at `doc/Chat.js.html`
 
+# Possible improvements
+
+* Right click drawing: when we rightclick on a canvas and slide the mouse out of it, drawing will happen when the mouse come
+back on the canvas, even if the rightclick is not held anymore.
+* Tests could be improved using the Vent lib. It's possible to simulate events with the trigger function 
 
 # Contribute
 
@@ -48,7 +53,7 @@ See [here](contribute.md) how to improve this project.
 
 # Version history
 
-* 2.3.5: Fix annotations on non-16/9 videos
+* 2.3.11: Fix annotations on non-16/9 videos
 * 2.3.0: Fix fullscreen issue with FF, use a jQuery plugin instead of a standalone library to detect the resize
 * 2.2.0: Mode can be reset to 'none'
 * 2.1.0: Screenshare support
