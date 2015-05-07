@@ -43,8 +43,6 @@ See the doc at `doc/Chat.js.html`
 
 # Possible improvements
 
-* Right click drawing: when we rightclick on a canvas and slide the mouse out of it, drawing will happen when the mouse come
-back on the canvas, even if the rightclick is not held anymore.
 * Tests could be improved using the Vent lib. It's possible to simulate events with the trigger function 
 
 # Contribute
