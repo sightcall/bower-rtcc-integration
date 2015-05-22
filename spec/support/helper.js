@@ -3,6 +3,10 @@ var Rtcc = {
     DRIVER: 'driver',
     PLUGIN: 'plugin',
     WEBRTC: 'webrtc'
+  },
+  pluginMode: {
+    EMBEDDED: 'embedded',
+    STANDALONE: 'standalone'
   }
 }
 

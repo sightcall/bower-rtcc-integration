@@ -23,13 +23,16 @@ describe('annotations module', function() {
       },
       sendInbandMessage: jasmine.createSpy('sendInbandMessage'),
       sendMessageToDriver: jasmine.createSpy('sendMessageToDriver'),
+      getPluginMode: jasmine.createSpy().and.callFake(function() {
+        return 'embedded'
+      }),
       getRtccUserType: function() {
         return 'internal'
       }
     };
 
     annotation = new RtccInt.Annotation(rtcc, callObject)
-    handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
+    handleInbandMessage = rtcc.on.calls.all()[0].args[1]
     framesizeCallback = callObject.on.calls.mostRecent().args[1]
   });
 

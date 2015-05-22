@@ -80,6 +80,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   var rightMouseDown = false;
   var isExternal = rtccObject.getRtccUserType() === 'external';
   var videoResizeTimeoutId;
+  var pluginStandalone = false;
 
   //ATTRIBUTES
   this.ctxPtr = false;
@@ -113,7 +114,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   this.setMode = function(mode) {
     currentMode = mode;
     setDefaultTimers()
-    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
+    if (isScreenStandalone()) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
@@ -196,7 +197,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase local drawings
    */
   this.clean = function() {
-    if (rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER) {
+    if (isScreenStandalone()) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
         '<controlcall id="' + callObject.callId + '"><' + cmd + '>clear</' + cmd + '></controlcall>')
@@ -475,8 +476,12 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', updateCanvasSize)
   }
 
+  function isScreenStandalone() {
+    return rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER || pluginStandalone
+  }
+
   function init() {
-    if (rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER && !container)
+    if (!isScreenStandalone() && !container)
       throw 'RtccInt.Draw needs a container to put the drawing.';
 
     //context menu disable right click
@@ -493,11 +498,19 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       })
     });
 
+    rtccObject.on('plugin.mode.standalone', function() {
+      pluginStandalone = true
+    })
+    rtccObject.on('plugin.mode.embedded', function() {
+      pluginStandalone = false
+    })
+    pluginStandalone = rtccObject.getPluginMode() === Rtcc.pluginMode.STANDALONE
+
     //container size change ?
     startContainerResizeDetection();
 
     //video size change ? (can happen when a mobile rotates)
-    if (!settings.container && !settings.isShare && rtccObject.getConnectionMode() !== Rtcc.connectionModes.DRIVER) {
+    if (!settings.container && !settings.isShare && !isScreenStandalone()) {
       if (callObject.enableFrameSizeDetection) {
         callObject.enableFrameSizeDetection();
       }

@@ -19,6 +19,9 @@ describe('share messages', function() {
       },
       sendInbandMessage: jasmine.createSpy('sendInbandMessage'),
       sendMessageToDriver: jasmine.createSpy('sendMessageToDriver'),
+      getPluginMode: jasmine.createSpy().and.callFake(function() {
+        return 'embedded'
+      }),
       getRtccUserType: function() {
         return 'internal'
       }
@@ -33,7 +36,7 @@ describe('share messages', function() {
   })
 
   it('draws on share messages', function() {
-    handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
+    handleInbandMessage = rtcc.on.calls.all()[0].args[1]
     handleInbandMessage('RTCCSDRAW7FFF7FFF') //50% 50%
     handleInbandMessage('RTCCSDRAWFFFE7FFF') //100% 50%
     expect(hasLineDrawn(annotation.ctxDraw, 75, 50, annotation.drawing.remote.color)).toBe(true)

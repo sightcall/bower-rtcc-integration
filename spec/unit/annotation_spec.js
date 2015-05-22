@@ -15,6 +15,9 @@ describe('draw module', function() {
       getConnectionMode: function() {
         return Rtcc.connectionModes.PLUGIN
       },
+      getPluginMode: jasmine.createSpy().and.callFake(function() {
+        return 'embedded'
+      }),
       getRtccUserType: function() {
         return 'internal'
       }
@@ -46,13 +49,13 @@ describe('draw module', function() {
   });
 
   it('receive inband message', function() {
-    var handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
+    var handleInbandMessage = rtcc.on.calls.all()[0].args[1]
     handleInbandMessage('RTCCPTR7FFF7FFF') //50% 50%
     expect(ctxPtr.drawImage).toHaveBeenCalledWith(draw.pointer, 21, 22)
   });
 
   it('handle out of screen pointer', function() {
-    var handleInbandMessage = rtcc.on.calls.mostRecent().args[1]
+    var handleInbandMessage = rtcc.on.calls.all()[0].args[1]
     handleInbandMessage('RTCCPTRFFFFFFFF')
     expect(ctxPtr.drawImage).not.toHaveBeenCalled()
   });
