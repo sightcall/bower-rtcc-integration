@@ -65,10 +65,15 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     pointer: $('<canvas class="rtccint-pointer" />'),
     annotations: $('<canvas class="rtccint-annotations" />')
   }
+
+
   var currentMode;
   var framesize = {
-    height: container.height(),
-    width: container.width(),
+    displayed: {
+      height: container.height(),
+      width: container.width(),
+
+    }
   };
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
@@ -264,11 +269,11 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     var width, height, widthRatio, heightRatio, ratio;
     //with a custom container, we don't care about the framesize
     if (!settings.container) {
-      widthRatio = container.width() / framesize.width
-      heightRatio = container.height() / framesize.height
+      widthRatio = container.width() / framesize.displayed.width
+      heightRatio = container.height() / framesize.displayed.height
       ratio = Math.min(heightRatio, widthRatio)
-      width = framesize.width * ratio
-      height = framesize.height * ratio
+      width = framesize.displayed.width * ratio
+      height = framesize.displayed.height * ratio
     }
 
     $.each(allCanvas, function(k, canvas) {
@@ -278,10 +283,13 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
       canvas[0].height = height || container.height()
     });
     //center
+    //
+    //
     $.each(allCanvas, function(k, canvas) {
       if (widthRatio) {
         canvas.css('left', Math.round((container.width() - canvas[0].width) / 2) + 'px')
         canvas.css('top', Math.round((container.height() - canvas[0].height) / 2) + 'px')
+
       }
     })
     updateContexts();
@@ -290,11 +298,20 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //Functions to ease maniputations of the hexa strings from the driver
 
+
   //str = XXXXYYYY
   function coordinatesFromHexStr(str) {
+    var calculated_height = framesize.decoded.height * framesize.displayed.width / framesize.decoded.width;
+    var calculated_width = framesize.displayed.width; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+    var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
+    var offsetWidth = (calculated_width - framesize.displayed.width) / 2;
+    var ratio_x = that._hexToPercent(str.substring(0, 4)) / 100;
+    var ratio_y = that._hexToPercent(str.substring(4, 8)) / 100;
+    var x = (((ratio_x * calculated_width) - offsetWidth));
+    var y = (((ratio_y * calculated_height) - offsetHeight));
     return {
-      x: Math.round(that._hexToPercent(str.substring(0, 4)) / 100 * allCanvas.pointer.width()),
-      y: Math.round(that._hexToPercent(str.substring(4, 8)) / 100 * allCanvas.pointer.height())
+      x: Math.round(x),
+      y: Math.round(y)
     }
   }
 
@@ -306,10 +323,18 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //https://github.com/weemo/Mobile/blob/feature-scheme/scheme.md
   //works for any videobox position
   function mouseCoordToHex(x, y) {
-    var xOffset = x - allCanvas.pointer.offset().left;
-    var yOffset = y - allCanvas.pointer.offset().top;
-    var hexX = that._percentToHex(xOffset / allCanvas.pointer.width() * 100)
-    var hexY = that._percentToHex(yOffset / allCanvas.pointer.height() * 100)
+    x = x - allCanvas.pointer.offset().left;
+    y = y - allCanvas.pointer.offset().top;
+    var calculated_height = framesize.decoded.height * framesize.displayed.width / framesize.decoded.width;
+    var calculated_width = framesize.displayed.width; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+    var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
+    var offsetWidth = (calculated_width - framesize.displayed.width) / 2;
+    var ratio_x = ((x + offsetWidth)) / calculated_width;
+    var ratio_y = ((y + offsetHeight)) / calculated_height;
+
+
+    var hexX = that._percentToHex(ratio_x * 100);
+    var hexY = that._percentToHex(ratio_y * 100);
     return hexX === 'FFFF' || hexY === 'FFFF' ? 'FFFFFFFF' : hexX + hexY;
   }
 

@@ -1,4 +1,4 @@
-# First steps 
+# First steps
 
 ## Compatibility
 
@@ -43,14 +43,14 @@ See the doc at `doc/Chat.js.html`
 
 # Possible improvements
 
-* Tests could be improved using the Vent lib. It's possible to simulate events with the trigger function 
+* Tests could be improved using the Vent lib. It's possible to simulate events with the trigger function
 
 # Contribute
 
 See [here](contribute.md) how to improve this project.
 
 # Version history
-
+* 2.3.14: Fix annotation offest bug
 * 2.3.12: Fix for mobile: pointer position, drop circle size, number of position messages. Also fix right click drawing bug when going outside of the canvas.
 * 2.3.11: Fix annotations on non-16/9 videos
 * 2.3.0: Fix fullscreen issue with FF, use a jQuery plugin instead of a standalone library to detect the resize

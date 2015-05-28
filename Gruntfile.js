@@ -197,7 +197,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('release', 'A task to tag, commit and push', function(level) {
     level = level || 'patch'
-    grunt.task.run(['bump-only:' + level, 'replace:version', 'bump-commit']);
+    grunt.task.run(['bump-only:' + level, 'replace:version']);
   })
 
 };
