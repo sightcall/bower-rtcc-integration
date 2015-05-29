@@ -1,6 +1,6 @@
 {
   "name": "rtcc-integration",
-  "version": "2.3.14",
+  "version": "2.3.15",
   "main": [
     "dist/css/main.css", 
     "dist/img/drop_green.png", 

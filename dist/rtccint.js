@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.14';
+RtccInt.version = '2.3.15';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -118,6 +118,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     displayed: {
       height: container.height(),
       width: container.width(),
+      scale: 1
 
     }
   };
@@ -317,7 +318,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     if (!settings.container) {
       widthRatio = container.width() / framesize.displayed.width
       heightRatio = container.height() / framesize.displayed.height
+
       ratio = Math.min(heightRatio, widthRatio)
+      framesize.displayed.scale = ratio;
+
       width = framesize.displayed.width * ratio
       height = framesize.displayed.height * ratio
     }
@@ -347,10 +351,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //str = XXXXYYYY
   function coordinatesFromHexStr(str) {
-    var calculated_height = framesize.decoded.height * framesize.displayed.width / framesize.decoded.width;
-    var calculated_width = framesize.displayed.width; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+    var calculated_height = framesize.decoded.height * framesize.displayed.width  * framesize.displayed.scale/ framesize.decoded.width;
+    var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
     var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
-    var offsetWidth = (calculated_width - framesize.displayed.width) / 2;
+    var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
     var ratio_x = that._hexToPercent(str.substring(0, 4)) / 100;
     var ratio_y = that._hexToPercent(str.substring(4, 8)) / 100;
     var x = (((ratio_x * calculated_width) - offsetWidth));
@@ -371,10 +375,10 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   function mouseCoordToHex(x, y) {
     x = x - allCanvas.pointer.offset().left;
     y = y - allCanvas.pointer.offset().top;
-    var calculated_height = framesize.decoded.height * framesize.displayed.width / framesize.decoded.width;
-    var calculated_width = framesize.displayed.width; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+    var calculated_height = framesize.decoded.height * framesize.displayed.width  * framesize.displayed.scale/ framesize.decoded.width;
+    var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
     var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
-    var offsetWidth = (calculated_width - framesize.displayed.width) / 2;
+    var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
     var ratio_x = ((x + offsetWidth)) / calculated_width;
     var ratio_y = ((y + offsetHeight)) / calculated_height;
 
