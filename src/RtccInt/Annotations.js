@@ -91,7 +91,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //ATTRIBUTES
   this.ctxPtr = false;
   this.ctxDraw = false;
-  this.messageDelay = 20; //in ms
+  this.messageDelay = 100; //in ms
 
   /**
    * @property {Number} [circleRatioToContainer=0.15] - Ratio of the circle size compared to the container size
