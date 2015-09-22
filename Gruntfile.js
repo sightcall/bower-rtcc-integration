@@ -15,7 +15,7 @@ module.exports = function(grunt) {
     bower: grunt.file.readJSON('bower.json'),
     watch: {
       files: jsFiles.concat(['assets/**/*']),
-      tasks: ['build', 'sftp']
+      tasks: ['build']
     },
 
     less: {

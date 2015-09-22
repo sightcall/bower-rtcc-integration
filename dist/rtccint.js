@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.3.15';
+RtccInt.version = '@@version';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -137,7 +137,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //ATTRIBUTES
   this.ctxPtr = false;
   this.ctxDraw = false;
-  this.messageDelay = 20; //in ms
+  this.messageDelay = 100; //in ms
 
   /**
    * @property {Number} [circleRatioToContainer=0.15] - Ratio of the circle size compared to the container size
@@ -552,7 +552,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
 
   function isScreenStandalone() {
-    return rtccObject.getConnectionMode() === Rtcc.connectionModes.DRIVER || pluginStandalone
+    var currentMode = rtccObject.getConnectionMode();
+    return currentMode === Rtcc.connectionModes.DRIVER  || currentMode === "extension" || pluginStandalone
   }
 
   function init() {
