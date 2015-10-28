@@ -193,7 +193,7 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('prepare', ['jshint', 'jsbeautifier:default', 'jasmine', 'jsdoc']);
   grunt.registerTask('precommit', ['jshint', 'jsbeautifier:git-pre-commit', 'jasmine']);
-  grunt.registerTask('build', ['less:development', 'concat', 'copy']);
+  grunt.registerTask('build', ['less:development', 'concat', 'copy', 'replace:version']);
 
   grunt.registerTask('release', 'A task to tag, commit and push', function(level) {
     level = level || 'patch'

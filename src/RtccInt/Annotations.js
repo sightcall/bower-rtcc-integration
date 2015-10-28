@@ -305,7 +305,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //str = XXXXYYYY
   function coordinatesFromHexStr(str) {
-    var calculated_height = framesize.decoded.height * framesize.displayed.width  * framesize.displayed.scale/ framesize.decoded.width;
+    var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
     var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
     var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
     var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
@@ -329,7 +329,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   function mouseCoordToHex(x, y) {
     x = x - allCanvas.pointer.offset().left;
     y = y - allCanvas.pointer.offset().top;
-    var calculated_height = framesize.decoded.height * framesize.displayed.width  * framesize.displayed.scale/ framesize.decoded.width;
+    var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
     var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
     var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
     var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
@@ -385,17 +385,23 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     target: $(document),
     listener: pointerMouseListener
   }]
-  modeListeners[RtccInt.Annotation.modes.DROP] = [{
-    event: 'mousedown',
-    target: container,
-    listener: function(event) {
-      if (event.which === 3) {
-        var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
-        rtccObject.sendInbandMessage(rtccPrefix + 'DROP' + hexCoords);
-        var coords = coordinatesFromHexStr(hexCoords)
-        that.dropCircle(coords.x, coords.y, that.drawing.local.circle)
+  modeListeners[RtccInt.Annotation.modes.DROP] = [
+    {
+      event: 'mousemove',
+      target: $(document),
+      listener: pointerMouseListener
+  },
+    {
+      event: 'mousedown',
+      target: container,
+      listener: function(event) {
+        if (event.which === 3) {
+          var hexCoords = mouseCoordToHex(event.pageX, event.pageY);
+          rtccObject.sendInbandMessage(rtccPrefix + 'DROP' + hexCoords);
+          var coords = coordinatesFromHexStr(hexCoords)
+          that.dropCircle(coords.x, coords.y, that.drawing.local.circle)
+        }
       }
-    }
   }]
   modeListeners[RtccInt.Annotation.modes.DRAW] = [{
     event: 'mousedown',
@@ -433,6 +439,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
             that.drawLine(previousDrawCoordinatesSent, coords, that.drawing.local.color)
           previousDrawCoordinatesSent = coords
         }
+      } else {
+        pointerMouseListener(event);
       }
     }
   }]
@@ -507,7 +515,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function isScreenStandalone() {
     var currentMode = rtccObject.getConnectionMode();
-    return currentMode === Rtcc.connectionModes.DRIVER  || currentMode === "extension" || pluginStandalone
+    return currentMode === Rtcc.connectionModes.DRIVER || currentMode === "extension" || pluginStandalone
   }
 
   function init() {
