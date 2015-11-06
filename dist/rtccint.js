@@ -166,7 +166,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   this.setMode = function(mode) {
     currentMode = mode;
     setDefaultTimers()
-    if (isScreenStandalone()) {
+    if (isScreenStandalone() || settings.isShare) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
