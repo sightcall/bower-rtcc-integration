@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.4.0';
+RtccInt.version = '2.4.1';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -165,8 +165,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    */
   this.setMode = function(mode) {
     currentMode = mode;
-    setDefaultTimers()
-    if (isScreenStandalone() || settings.isShare) {
+    setDefaultTimers();
+    if (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare)) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToDriver(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
@@ -561,7 +561,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function isScreenStandalone() {
     var currentMode = rtccObject.getConnectionMode();
-    return currentMode === Rtcc.connectionModes.DRIVER || currentMode === "extension" || pluginStandalone
+    return currentMode === Rtcc.connectionModes.PLUGIN || currentMode === "extension" || pluginStandalone
   }
 
   function init() {
@@ -588,7 +588,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     rtccObject.on('plugin.mode.embedded', function() {
       pluginStandalone = false
     })
-    pluginStandalone = rtccObject.getPluginMode() === Rtcc.pluginMode.STANDALONE
+    pluginStandalone = rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && rtccObject.getPluginMode() === Rtcc.pluginMode.STANDALONE
 
     //container size change ?
     startContainerResizeDetection();
