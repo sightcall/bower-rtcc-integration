@@ -168,7 +168,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
     setDefaultTimers();
     if (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare)) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
-      rtccObject.sendMessageToDriver(
+      rtccObject.sendMessageToPlugin(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
     } else
       updateModeListener();
@@ -249,9 +249,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase local drawings
    */
   this.clean = function() {
-    if (isScreenStandalone()) {
+    if (isScreenStandalone() || settings.isShare) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
-      rtccObject.sendMessageToDriver(
+      rtccObject.sendMessageToPlugin(
         '<controlcall id="' + callObject.callId + '"><' + cmd + '>clear</' + cmd + '></controlcall>')
     } else {
       this.cleanPointer();
