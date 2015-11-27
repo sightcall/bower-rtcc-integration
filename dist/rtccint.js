@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.4.1';
+RtccInt.version = '2.4.4';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -561,7 +561,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function isScreenStandalone() {
     var currentMode = rtccObject.getConnectionMode();
-    return currentMode === Rtcc.connectionModes.PLUGIN || currentMode === "extension" || pluginStandalone
+    return currentMode === "extension" || pluginStandalone
   }
 
   function init() {

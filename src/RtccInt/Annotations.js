@@ -515,7 +515,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   function isScreenStandalone() {
     var currentMode = rtccObject.getConnectionMode();
-    return currentMode === Rtcc.connectionModes.PLUGIN || currentMode === "extension" || pluginStandalone
+    return currentMode === "extension" || pluginStandalone
   }
 
   function init() {
