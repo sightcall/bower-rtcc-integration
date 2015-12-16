@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.4.4';
+RtccInt.version = '2.4.5';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -157,6 +157,9 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
   this.drawing.local.circle.src = isExternal ? settings.circles.external : settings.circles.premium;
   this.drawing.remote.circle.src = isExternal ? settings.circles.premium : settings.circles.external;
+  var sendAnnotationCmdsToPlugin = function (){
+    return  (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare))
+  }
 
   //PUBLIC
   /**
@@ -166,7 +169,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   this.setMode = function(mode) {
     currentMode = mode;
     setDefaultTimers();
-    if (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare)) {
+    if (sendAnnotationCmdsToPlugin()){
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToPlugin(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
@@ -249,7 +252,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
    * Erase local drawings
    */
   this.clean = function() {
-    if (isScreenStandalone() || settings.isShare) {
+    if (sendAnnotationCmdsToPlugin()) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToPlugin(
         '<controlcall id="' + callObject.callId + '"><' + cmd + '>clear</' + cmd + '></controlcall>')
