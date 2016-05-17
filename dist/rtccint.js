@@ -9,7 +9,7 @@ RtccInt = RtccIntegration = {};
 /**
  * @property {String} version - The version of the library
  */
-RtccInt.version = '2.4.5';
+RtccInt.version = '2.4.6';
 
 try {
   RtccInt.scriptpath = $("script[src]").last().attr("src").split('?')[0].split('/').slice(0, -1).join('/') + '/';
@@ -114,13 +114,35 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
 
   var currentMode;
+
+  function getWidth() {
+    if (container.width() > container.height()) {
+      return (16 * container.height()) / 9;
+    } else {
+      return container.width();
+    }
+  }
+
+  function getHeight() {
+    if (container.width() < container.height()) {
+      return (9 * container.width()) / 16;
+
+    } else {
+      return container.height();
+    }
+  }
+
   var framesize = {
     displayed: {
-      height: container.height(),
-      width: container.width(),
+      height: getHeight(),
+      width: getWidth(),
       scale: 1
-
+    },
+    decoded: {
+      height: 0,
+      width: 0
     }
+
   };
   var hexHundredPercent = parseInt('FFFE', 16);
   var ctx;
@@ -157,8 +179,8 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   }
   this.drawing.local.circle.src = isExternal ? settings.circles.external : settings.circles.premium;
   this.drawing.remote.circle.src = isExternal ? settings.circles.premium : settings.circles.external;
-  var sendAnnotationCmdsToPlugin = function (){
-    return  (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare))
+  var sendAnnotationCmdsToPlugin = function() {
+    return (isScreenStandalone() || (rtccObject.getConnectionMode() === Rtcc.connectionModes.PLUGIN && settings.isShare))
   }
 
   //PUBLIC
@@ -169,7 +191,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   this.setMode = function(mode) {
     currentMode = mode;
     setDefaultTimers();
-    if (sendAnnotationCmdsToPlugin()){
+    if (sendAnnotationCmdsToPlugin()) {
       var cmd = settings.isShare ? 'sharepointer' : 'callpointer';
       rtccObject.sendMessageToPlugin(
         '<controlcall id="' + callObject.callId + '"><' + cmd + ' mode="' + mode + '"></' + cmd + '></controlcall>')
@@ -354,14 +376,24 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
 
   //str = XXXXYYYY
   function coordinatesFromHexStr(str) {
-    var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
-    var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
-    var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
-    var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
+
+    var x, y;
     var ratio_x = that._hexToPercent(str.substring(0, 4)) / 100;
     var ratio_y = that._hexToPercent(str.substring(4, 8)) / 100;
-    var x = (((ratio_x * calculated_width) - offsetWidth));
-    var y = (((ratio_y * calculated_height) - offsetHeight));
+
+    if (framesize.decoded.height === 0) {
+      x = ratio_x * getWidth();
+      y = ratio_y * getHeight();
+    } else {
+      var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
+      var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+      var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
+      var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
+      x = (((ratio_x * calculated_width) - offsetWidth));
+      y = (((ratio_y * calculated_height) - offsetHeight));
+    }
+
+
     return {
       x: Math.round(x),
       y: Math.round(y)
@@ -376,14 +408,23 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
   //https://github.com/weemo/Mobile/blob/feature-scheme/scheme.md
   //works for any videobox position
   function mouseCoordToHex(x, y) {
+    var ratio_x, ratio_y;
     x = x - allCanvas.pointer.offset().left;
     y = y - allCanvas.pointer.offset().top;
-    var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
-    var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
-    var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
-    var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
-    var ratio_x = ((x + offsetWidth)) / calculated_width;
-    var ratio_y = ((y + offsetHeight)) / calculated_height;
+
+    if (framesize.decoded.height === 0) {
+      ratio_x = x / getWidth();
+      ratio_y = y / getHeight();
+    } else {
+      var calculated_height = framesize.decoded.height * framesize.displayed.width * framesize.displayed.scale / framesize.decoded.width;
+      var calculated_width = framesize.displayed.width * framesize.displayed.scale; //framesize.decoded.width  * framesize.displayed.height / framesize.decoded.height  ;
+      var offsetHeight = (calculated_height - framesize.displayed.height) / 2;
+      var offsetWidth = (calculated_width - (framesize.displayed.width * framesize.displayed.scale)) / 2;
+      ratio_x = ((x + offsetWidth)) / calculated_width;
+      ratio_y = ((y + offsetHeight)) / calculated_height;
+    }
+
+
 
 
     var hexX = that._percentToHex(ratio_x * 100);
