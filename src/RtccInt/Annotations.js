@@ -544,7 +544,7 @@ RtccInt.Annotation = function(rtccObject, callObject, settings) {
         message = message.replace('RTCCS', 'RTCC')
       }
       if (message.search(key) === 0) {
-        listener(message.replace(key, ''))
+        listener(message.replace(key, '').slice(0, 8))
       }
     })
   }
